@@ -72,7 +72,8 @@ import {
   Eye,
   X,
   Download,
-  Upload
+  Upload,
+  ChevronLeft
 } from "lucide-react"
 import { toast } from "sonner"
 import { QuestionType, DifficultyLevel } from "@prisma/client"
@@ -150,7 +151,7 @@ function SortableQuestion({
       <TableCell>
         <Badge variant={
           question.type === QuestionType.MULTIPLE_CHOICE ? "default" :
-          question.type === QuestionType.TRUE_FALSE ? "secondary" : "outline"
+            question.type === QuestionType.TRUE_FALSE ? "secondary" : "outline"
         }>
           {question.type.replace('_', ' ')}
         </Badge>
@@ -158,7 +159,7 @@ function SortableQuestion({
       <TableCell>
         <Badge variant={
           question.difficulty === DifficultyLevel.EASY ? "default" :
-          question.difficulty === DifficultyLevel.MEDIUM ? "secondary" : "destructive"
+            question.difficulty === DifficultyLevel.MEDIUM ? "secondary" : "destructive"
         }>
           {question.difficulty}
         </Badge>
@@ -406,8 +407,8 @@ export default function QuizQuestionsPage() {
         // Parse options from database (stored as JSON string) and convert to pipe-separated format
         let optionsString = ""
         try {
-          const parsedOptions = Array.isArray(question.options) 
-            ? question.options 
+          const parsedOptions = Array.isArray(question.options)
+            ? question.options
             : JSON.parse(question.options || "[]")
           optionsString = parsedOptions.join("|")
         } catch (e) {
@@ -426,7 +427,7 @@ export default function QuizQuestionsPage() {
           question.points.toString()
         ]
       })
-    ].map(row => 
+    ].map(row =>
       // Properly escape CSV values that contain commas or quotes
       row.map(cell => {
         if (cell === null || cell === undefined) return ""
@@ -462,7 +463,7 @@ export default function QuizQuestionsPage() {
       complete: async (results) => {
         try {
           console.log("CSV parsing results:", results)
-          
+
           // Filter out empty rows and validate required fields
           const validQuestions = results.data.filter((row: any) => {
             const hasTitle = row.Title && row.Title.trim() !== ""
@@ -470,7 +471,7 @@ export default function QuizQuestionsPage() {
             const hasType = row.Type && row.Type.trim() !== ""
             const hasOptions = row.Options && row.Options.trim() !== ""
             const hasCorrectAnswer = row["Correct Answer"] && row["Correct Answer"].trim() !== ""
-            
+
             return hasTitle && hasContent && hasType && hasOptions && hasCorrectAnswer
           })
 
@@ -484,7 +485,7 @@ export default function QuizQuestionsPage() {
           const importPromises = validQuestions.map(async (question: any, index: number) => {
             try {
               console.log(`Processing question ${index + 1}:`, question)
-              
+
               // Normalize question type
               let questionType = question.Type?.toString().toUpperCase().trim()
               if (!Object.values(QuestionType).includes(questionType as QuestionType)) {
@@ -497,7 +498,7 @@ export default function QuizQuestionsPage() {
               let options = []
               if (question.Options) {
                 const optionsStr = question.Options.toString().trim()
-                
+
                 // Try to parse as JSON first (handles ["aa","bb","cc"] format)
                 if (optionsStr.startsWith('[') && optionsStr.endsWith(']')) {
                   try {
@@ -509,13 +510,13 @@ export default function QuizQuestionsPage() {
                     console.warn(`Failed to parse options as JSON for question "${question.Title}":`, e)
                   }
                 }
-                
+
                 // If JSON parsing failed or not JSON, try different delimiters
                 if (options.length === 0) {
                   // Try pipe delimiter first
                   if (optionsStr.includes('|')) {
                     options = optionsStr.split('|').map(opt => opt.trim()).filter(opt => opt.length > 0)
-                  } 
+                  }
                   // Try comma delimiter
                   else if (optionsStr.includes(',')) {
                     options = optionsStr.split(',').map(opt => opt.trim()).filter(opt => opt.length > 0)
@@ -624,7 +625,7 @@ export default function QuizQuestionsPage() {
           }
 
           if (failedImports.length > 0) {
-            const errorMessages = failedImports.map(failure => 
+            const errorMessages = failedImports.map(failure =>
               `"${failure.title}": ${failure.message}`
             ).join('\n')
             console.error("Failed imports:", errorMessages)
@@ -640,7 +641,7 @@ export default function QuizQuestionsPage() {
         toast.error(`Failed to parse CSV file: ${error.message}`)
       }
     })
-    
+
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
@@ -649,14 +650,14 @@ export default function QuizQuestionsPage() {
 
   const filteredQuestions = questions.filter(question => {
     const matchesSearch = question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         question.content.toLowerCase().includes(searchTerm.toLowerCase())
+      question.content.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesDifficulty = difficultyFilter === "all" || question.difficulty === difficultyFilter
     return matchesSearch && matchesDifficulty
   })
 
   const filteredAvailableQuestions = availableQuestions.filter(question => {
     const matchesSearch = question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         question.content.toLowerCase().includes(searchTerm.toLowerCase())
+      question.content.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesDifficulty = difficultyFilter === "all" || question.difficulty === difficultyFilter
     return matchesSearch && matchesDifficulty
   })
@@ -667,24 +668,6 @@ export default function QuizQuestionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.back()}
-          className="h-9"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Quiz Questions</h1>
-          <p className="text-muted-foreground">
-            Manage questions for "{quizTitle}"
-          </p>
-        </div>
-      </div>
-
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <div className="relative">
@@ -731,6 +714,14 @@ export default function QuizQuestionsPage() {
           <Button onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Create Question
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.back()}
+            className="h-9"
+          >
+            <ChevronLeft className="h-5 w-5" />
           </Button>
         </div>
       </div>
@@ -818,13 +809,13 @@ export default function QuizQuestionsPage() {
                         <div className="flex gap-2 mt-1">
                           <Badge variant={
                             question.type === QuestionType.MULTIPLE_CHOICE ? "default" :
-                            question.type === QuestionType.TRUE_FALSE ? "secondary" : "outline"
+                              question.type === QuestionType.TRUE_FALSE ? "secondary" : "outline"
                           }>
                             {question.type.replace('_', ' ')}
                           </Badge>
                           <Badge variant={
                             question.difficulty === DifficultyLevel.EASY ? "default" :
-                            question.difficulty === DifficultyLevel.MEDIUM ? "secondary" : "destructive"
+                              question.difficulty === DifficultyLevel.MEDIUM ? "secondary" : "destructive"
                           }>
                             {question.difficulty}
                           </Badge>
@@ -872,7 +863,7 @@ export default function QuizQuestionsPage() {
                   <Label className="text-sm font-medium text-muted-foreground">Type</Label>
                   <Badge variant={
                     selectedQuestion.type === QuestionType.MULTIPLE_CHOICE ? "default" :
-                    selectedQuestion.type === QuestionType.TRUE_FALSE ? "secondary" : "outline"
+                      selectedQuestion.type === QuestionType.TRUE_FALSE ? "secondary" : "outline"
                   }>
                     {selectedQuestion.type.replace('_', ' ')}
                   </Badge>
@@ -907,7 +898,7 @@ export default function QuizQuestionsPage() {
                   <Label className="text-sm font-medium text-muted-foreground">Difficulty</Label>
                   <Badge variant={
                     selectedQuestion.difficulty === DifficultyLevel.EASY ? "default" :
-                    selectedQuestion.difficulty === DifficultyLevel.MEDIUM ? "secondary" : "destructive"
+                      selectedQuestion.difficulty === DifficultyLevel.MEDIUM ? "secondary" : "destructive"
                   }>
                     {selectedQuestion.difficulty}
                   </Badge>
@@ -942,7 +933,7 @@ export default function QuizQuestionsPage() {
               <Input
                 id="title"
                 value={createFormData.title}
-                onChange={(e) => setCreateFormData({...createFormData, title: e.target.value})}
+                onChange={(e) => setCreateFormData({ ...createFormData, title: e.target.value })}
                 placeholder="Enter question title"
               />
             </div>
@@ -951,16 +942,16 @@ export default function QuizQuestionsPage() {
               <Textarea
                 id="content"
                 value={createFormData.content}
-                onChange={(e) => setCreateFormData({...createFormData, content: e.target.value})}
+                onChange={(e) => setCreateFormData({ ...createFormData, content: e.target.value })}
                 placeholder="Enter question content"
                 rows={3}
               />
             </div>
             <div className="grid gap-3">
               <Label htmlFor="type">Type</Label>
-              <Select 
-                value={createFormData.type.toString()} 
-                onValueChange={(value: string) => setCreateFormData({...createFormData, type: value as QuestionType})}
+              <Select
+                value={createFormData.type.toString()}
+                onValueChange={(value: string) => setCreateFormData({ ...createFormData, type: value as QuestionType })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select question type" />
@@ -974,9 +965,9 @@ export default function QuizQuestionsPage() {
             </div>
             <div className="grid gap-3">
               <Label htmlFor="difficulty">Difficulty</Label>
-              <Select 
-                value={createFormData.difficulty.toString()} 
-                onValueChange={(value: string) => setCreateFormData({...createFormData, difficulty: value as DifficultyLevel})}
+              <Select
+                value={createFormData.difficulty.toString()}
+                onValueChange={(value: string) => setCreateFormData({ ...createFormData, difficulty: value as DifficultyLevel })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select difficulty" />
@@ -1000,7 +991,7 @@ export default function QuizQuestionsPage() {
                         onChange={(e) => {
                           const newOptions = [...createFormData.options]
                           newOptions[index] = e.target.value
-                          setCreateFormData({...createFormData, options: newOptions})
+                          setCreateFormData({ ...createFormData, options: newOptions })
                         }}
                         placeholder={`Option ${index + 1}`}
                         className="flex-1"
@@ -1013,7 +1004,7 @@ export default function QuizQuestionsPage() {
                             size="sm"
                             onClick={() => {
                               const newOptions = [...createFormData.options, ""]
-                              setCreateFormData({...createFormData, options: newOptions})
+                              setCreateFormData({ ...createFormData, options: newOptions })
                             }}
                           >
                             <Plus className="h-4 w-4" />
@@ -1025,7 +1016,7 @@ export default function QuizQuestionsPage() {
                               size="sm"
                               onClick={() => {
                                 const newOptions = createFormData.options.filter((_, i) => i !== index)
-                                setCreateFormData({...createFormData, options: newOptions})
+                                setCreateFormData({ ...createFormData, options: newOptions })
                               }}
                             >
                               <X className="h-4 w-4" />
@@ -1043,7 +1034,7 @@ export default function QuizQuestionsPage() {
               <Input
                 id="correctAnswer"
                 value={createFormData.correctAnswer}
-                onChange={(e) => setCreateFormData({...createFormData, correctAnswer: e.target.value})}
+                onChange={(e) => setCreateFormData({ ...createFormData, correctAnswer: e.target.value })}
                 placeholder="Enter correct answer"
               />
             </div>
@@ -1053,7 +1044,7 @@ export default function QuizQuestionsPage() {
                 id="points"
                 type="number"
                 value={createFormData.points}
-                onChange={(e) => setCreateFormData({...createFormData, points: parseFloat(e.target.value) || 1.0})}
+                onChange={(e) => setCreateFormData({ ...createFormData, points: parseFloat(e.target.value) || 1.0 })}
                 placeholder="1"
               />
             </div>
@@ -1062,7 +1053,7 @@ export default function QuizQuestionsPage() {
               <Textarea
                 id="explanation"
                 value={createFormData.explanation}
-                onChange={(e) => setCreateFormData({...createFormData, explanation: e.target.value})}
+                onChange={(e) => setCreateFormData({ ...createFormData, explanation: e.target.value })}
                 placeholder="Optional explanation for the answer (supports basic HTML tags)"
                 rows={3}
                 className="font-mono text-sm"
