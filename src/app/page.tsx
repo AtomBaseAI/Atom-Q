@@ -254,13 +254,13 @@ function LoginForm() {
 
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">QuizMaster</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Atom Q</CardTitle>
           <CardDescription className="text-center">
             Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 mb-2">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
