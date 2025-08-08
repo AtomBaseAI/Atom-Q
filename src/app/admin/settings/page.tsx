@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { toasts } from "@/lib/toasts"
 import { Loader2, Save, Settings } from "lucide-react"
 import { useAccentColor } from "@/components/providers/accent-color-provider"
+import HexagonLoader from "@/components/Loader/Loading"
 
 interface SettingsData {
   id: string
@@ -99,7 +100,7 @@ export default function SettingsPage() {
         setSettings(updatedSettings)
         setAccentColor(updatedSettings.accentColor)
         toasts.settingsUpdated()
-        
+
         // Show specific toasts for maintenance mode changes
         if (formData.maintenanceMode !== updatedSettings.maintenanceMode) {
           if (updatedSettings.maintenanceMode) {
@@ -120,9 +121,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      <div className="flex items-center justify-center h-[80vh] "><HexagonLoader size={80} /></div>
     )
   }
 
