@@ -77,6 +77,7 @@ import {
 import { toast } from "sonner"
 import { QuestionType, DifficultyLevel } from "@prisma/client"
 import Papa from "papaparse"
+import HexagonLoader from "@/components/Loader/Loading"
 
 interface Question {
   id: string
@@ -661,7 +662,7 @@ export default function QuizQuestionsPage() {
   })
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>
+    return <div className="flex items-center justify-center h-[80vh] "><HexagonLoader size={80} /></div>
   }
 
   return (

@@ -40,6 +40,7 @@ import { ColumnDef } from "@tanstack/react-table"
 
 // Import toast functions that were missing in the original code
 import { toast } from "sonner";
+import HexagonLoader from "@/components/Loader/Loading"
 
 interface User {
   id: string
@@ -238,7 +239,7 @@ export default function QuizStudentsPage() {
   )
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>
+    return <div className="flex items-center justify-center h-[80vh] "><HexagonLoader size={80} /></div>
   }
 
   if (!quiz) {

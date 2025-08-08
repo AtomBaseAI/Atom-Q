@@ -30,6 +30,7 @@ interface User {
 
 import { useUserStore } from "@/stores/user"
 import { useQuizCacheStore } from "@/stores/quiz-cache"
+import HexagonLoader from "@/components/Loader/Loading"
 
 
 interface UserProfile {
@@ -114,7 +115,7 @@ export default function UserSettingsPage() {
       }
 
       const updatedUserData = await response.json()
-      
+
       // Update local state
       setProfile(prev => ({
         ...prev,
@@ -161,7 +162,7 @@ export default function UserSettingsPage() {
     const reader = new FileReader();
     reader.onloadend = async () => {
       const avatarUrl = reader.result as string;
-      
+
       try {
         // Update the profile with the new avatar
         const response = await fetch("/api/user/profile", {
@@ -179,7 +180,7 @@ export default function UserSettingsPage() {
         }
 
         const updatedUserData = await response.json();
-        
+
         // Update local state
         setProfile(prev => ({ ...prev, avatar: updatedUserData.avatar }));
 
@@ -253,9 +254,7 @@ export default function UserSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      <div className="flex items-center justify-center h-[80vh] "><HexagonLoader size={80} /></div>
     )
   }
 

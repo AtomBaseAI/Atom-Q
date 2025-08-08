@@ -19,6 +19,7 @@ import { QuizAttemptActivity } from "@/types/api"
 import { toasts } from "@/lib/toasts"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useQuizCacheStore } from "@/stores/quiz-cache"
+import HexagonLoader from "@/components/Loader/Loading"
 
 interface UserStats {
   totalQuizzes: number
@@ -148,7 +149,7 @@ export default function UserDashboard() {
   const weeklyProgressData = getWeeklyProgressData()
 
   if (loading && !userStats) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>
+    return <div className="flex items-center justify-center h-[80vh] "><HexagonLoader size={80} /></div>
   }
 
   return (

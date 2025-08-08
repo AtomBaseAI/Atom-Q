@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { toasts } from "@/lib/toasts"
+import HexagonLoader from "@/components/Loader/Loading"
 
 function LoginForm() {
   const [email, setEmail] = useState("")
@@ -158,7 +159,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center h-[80vh] "><HexagonLoader size={80} /></div>}>
       <LoginForm />
     </Suspense>
   )

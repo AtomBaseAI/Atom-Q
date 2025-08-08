@@ -52,6 +52,7 @@ import { UserRole } from "@prisma/client"
 import Papa from "papaparse"
 import { DataTable } from "@/components/ui/data-table"
 import { ColumnDef } from "@tanstack/react-table"
+import HexagonLoader from "@/components/Loader/Loading"
 
 interface User {
   id: string
@@ -358,7 +359,7 @@ export default function UsersPage() {
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>
+    return <div className="flex items-center justify-center h-[80vh] "><HexagonLoader size={80} /></div>
   }
 
   return (

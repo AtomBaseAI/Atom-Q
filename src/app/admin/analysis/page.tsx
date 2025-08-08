@@ -38,6 +38,7 @@ import {
   Calendar
 } from "lucide-react"
 import { toasts } from "@/lib/toasts"
+import HexagonLoader from "@/components/Loader/Loading"
 
 
 interface Quiz {
@@ -152,7 +153,7 @@ export default function AnalysisPage() {
   
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>
+    return <div className="flex items-center justify-center h-[80vh] "><HexagonLoader size={80} /></div>
   }
 
   return (
