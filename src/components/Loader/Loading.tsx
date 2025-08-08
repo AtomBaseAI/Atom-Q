@@ -67,7 +67,7 @@ export default function HexagonLoader({ size = 80, className = "" }: { size?: nu
                     {/* Inner hexagon with theme-aware colors */}
                     <path
                         d={innerPath}
-                        className="fill-blue-600 dark:fill-blue-400 transition-colors duration-300"
+                        className="fill-purple-600 dark:fill-purple-400 transition-colors duration-300"
                         filter={`url(#glow-${size})`}
                         style={{
                             transformOrigin: 'center',
@@ -128,81 +128,3 @@ export default function HexagonLoader({ size = 80, className = "" }: { size?: nu
     )
 }
 
-
-
-// Main Demo Component
-// export default function Component() {
-//     const [isLoading, setIsLoading] = useState(false)
-
-//     const handleStartLoading = () => {
-//         setIsLoading(true)
-//         setTimeout(() => setIsLoading(false), 3000)
-//     }
-
-//     return (
-//         <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:via-purple-900 dark:to-slate-900 bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 transition-colors duration-300 flex items-center justify-center p-4">
-//             <Card className="w-full max-w-md bg-white/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 backdrop-blur-sm transition-colors duration-300">
-//                 <CardHeader className="text-center">
-//                     <div className="flex items-center justify-between mb-2">
-//                         <CardTitle className="text-slate-900 dark:text-white transition-colors duration-300">
-//                             Next-Themes Hexagon Loader
-//                         </CardTitle>
-//                     </div>
-//                     <CardDescription className="text-slate-600 dark:text-slate-300 transition-colors duration-300">
-//                         Optimized with next-themes integration
-//                     </CardDescription>
-//                 </CardHeader>
-//                 <CardContent className="space-y-8">
-//                     {/* Different sizes showcase */}
-//                     <div className="space-y-6">
-//                         <div className="text-center">
-//                             <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4 transition-colors duration-300">
-//                                 Different Sizes
-//                             </h3>
-//                             <div className="flex items-center justify-center gap-6">
-//                                 <HexagonLoader size={40} />
-//                                 <HexagonLoader size={60} />
-//                                 <HexagonLoader size={80} />
-//                                 <HexagonLoader size={100} />
-//                             </div>
-//                         </div>
-//                     </div>
-
-//                     {/* Interactive demo */}
-//                     <div className="text-center space-y-4">
-//                         <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors duration-300">
-//                             Interactive Demo
-//                         </h3>
-//                         {isLoading ? (
-//                             <div className="py-8">
-//                                 <HexagonLoader size={80} className="mb-4" />
-//                                 <p className="text-sm text-slate-600 dark:text-slate-400 transition-colors duration-300">
-//                                     Loading...
-//                                 </p>
-//                             </div>
-//                         ) : (
-//                             <div className="py-8">
-//                                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-500/20 border border-green-300 dark:border-green-500/30 flex items-center justify-center backdrop-blur-sm transition-colors duration-300">
-//                                     <svg className="w-8 h-8 text-green-600 dark:text-green-400 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-//                                     </svg>
-//                                 </div>
-//                                 <p className="text-sm text-slate-600 dark:text-slate-400 transition-colors duration-300">
-//                                     System Ready
-//                                 </p>
-//                             </div>
-//                         )}
-
-//                         <Button
-//                             onClick={handleStartLoading}
-//                             disabled={isLoading}
-//                             className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white border-0 transition-colors duration-300"
-//                         >
-//                             {isLoading ? 'Processing...' : 'Initialize Loading Sequence'}
-//                         </Button>
-//                     </div>
-//                 </CardContent>
-//             </Card>
-//         </div>
-//     )
-// }
