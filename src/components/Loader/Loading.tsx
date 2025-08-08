@@ -11,7 +11,6 @@ export default function HexagonLoader({ size = 80, className = "" }: { size?: nu
     const outerRadius = (size - strokeWidth) / 2
     const innerRadius = size / 5
 
-    // Generate hexagon path - memoized for performance
     const createHexagonPath = (radius: number, centerX: number, centerY: number) => {
         const points = []
         for (let i = 0; i < 6; i++) {
@@ -30,7 +29,6 @@ export default function HexagonLoader({ size = 80, className = "" }: { size?: nu
     return (
         <div className={`inline-flex items-center justify-center ${className}`}>
             <div className="relative">
-                {/* Optimized background glow */}
                 <div className="absolute inset-0 rounded-full opacity-20 dark:opacity-30 bg-gradient-to-r from-blue-500/30 via-purple-500/20 to-blue-500/30 blur-[10px] animate-pulse" />
 
                 <svg
@@ -49,7 +47,6 @@ export default function HexagonLoader({ size = 80, className = "" }: { size?: nu
                         </filter>
                     </defs>
 
-                    {/* Outer hexagon with theme-aware contrast */}
                     <path
                         d={outerPath}
                         fill="none"
@@ -64,7 +61,6 @@ export default function HexagonLoader({ size = 80, className = "" }: { size?: nu
                         }}
                     />
 
-                    {/* Inner hexagon with theme-aware colors */}
                     <path
                         d={innerPath}
                         className="fill-purple-600 dark:fill-purple-400 transition-colors duration-300"
