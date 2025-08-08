@@ -263,10 +263,10 @@ export default function QuizzesPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => router.push(`/admin/quiz/${quiz.id}`)}>
+              {/* <DropdownMenuItem onClick={() => router.push(`/admin/quiz/${quiz.id}`)}>
                 <Eye className="mr-2 h-4 w-4" />
                 View
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuItem onClick={() => router.push(`/admin/quiz/${quiz.id}/questions`)}>
                 <FileQuestion className="mr-2 h-4 w-4" />
                 Questions
