@@ -45,11 +45,11 @@ export function AppSidebar({
   return (
     <div className={cn(
       "flex flex-col h-full bg-card border-r transition-all duration-300",
-      open ? "w-64" : "w-16"
+      open ? "w-60" : "w-14"
     )}>
       <div className="flex items-center justify-between p-4 border-b">
         {open && (
-          <h2 className="text-lg font-semibold">QuizMaster</h2>
+          <h2 className="text-lg font-semibold">Atom&nbsp;Q</h2>
         )}
         <Button
           variant="ghost"
