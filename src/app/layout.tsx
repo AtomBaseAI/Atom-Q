@@ -6,7 +6,13 @@ import { ThemeProvider } from "@/components/providers/theme-provider"
 import { AccentColorProvider } from "@/components/providers/accent-color-provider"
 import { motion, AnimatePresence } from "framer-motion"
 import { usePathname } from "next/navigation"
+import type { Metadata } from 'next';
 import "./globals.css"
+
+export const metadata: Metadata = {
+  title: 'Atom Q',
+  description: 'Powered by Atom Labs',
+};
 
 export default function RootLayout({
   children,
