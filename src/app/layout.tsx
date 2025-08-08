@@ -1,52 +1,33 @@
-"use client"
-
-import { Toaster } from "sonner"
-import { SessionProviderWrapper } from "@/components/providers/session-provider"
-import { ThemeProvider } from "@/components/providers/theme-provider"
-import { AccentColorProvider } from "@/components/providers/accent-color-provider"
-import { motion, AnimatePresence } from "framer-motion"
-import { usePathname } from "next/navigation"
-import type { Metadata } from 'next';
+import { Metadata } from "next"
 import "./globals.css"
+import ClientLayout from "@/components/layout/client-layout"
 
 export const metadata: Metadata = {
-  title: 'Atom Q',
-  description: 'Powered by Atom Labs',
-};
+  title: "Atom Q",
+  description: "Knowledge testing portal powered by Atom Labs",
+  
+  openGraph: {
+    title: "Atom Q",
+    description: "Knowledge testing portal powered by Atom Labs",
+    url: "https://atom-q.atomapps.space/",
+    siteName: "Atom Q",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Atom Q",
+    description: "Knowledge testing portal powered by Atom Labs",
+  },
+}
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const pathname = usePathname()
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <SessionProviderWrapper>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <AccentColorProvider>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={pathname}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                >
-                  {children}
-                </motion.div>
-              </AnimatePresence>
-              <Toaster richColors position="top-right" />
-            </AccentColorProvider>
-          </ThemeProvider>
-        </SessionProviderWrapper>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   )
