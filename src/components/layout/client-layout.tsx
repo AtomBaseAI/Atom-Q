@@ -7,7 +7,6 @@ import { AccentColorProvider } from "@/components/providers/accent-color-provide
 import { motion, AnimatePresence } from "framer-motion"
 import { usePathname } from "next/navigation"
 
-
 export default function ClientLayout({
   children,
 }: {
