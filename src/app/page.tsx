@@ -308,7 +308,7 @@ function LoginForm() {
             </div>
             <div className="text-xs text-muted-foreground text-center space-y-1">
               <p><strong>Demo Credentials:</strong></p>
-              <p>Admin: admin@atomcode.dev / admin@atomcode.dev</p>
+              <p>Admin: admin@demo.com / admin123</p>
               <p>User: user@example.com / user123</p>
             </div>
           </CardFooter>
