@@ -305,7 +305,7 @@ export default function QuestionGroupPage() {
   }
 
   if (loading) {
-    return  <div className="flex items-center justify-center h-[80vh] "><HexagonLoader size={80} /></div>
+    return <div className="flex items-center justify-center h-[80vh] "><HexagonLoader size={80} /></div>
   }
 
   if (!questionGroup) {
@@ -350,12 +350,6 @@ export default function QuestionGroupPage() {
                   <DialogTitle>
                     {editingQuestion ? "Edit Question" : "Create Question"}
                   </DialogTitle>
-                  <DialogDescription>
-                    {editingQuestion
-                      ? "Update the question details below."
-                      : "Create a new question in this group."
-                    }
-                  </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-row flex-1 overflow-y-auto px-6 py-4 space-y-6 gap-4">
                   <div className="flex flex-col flex-1 w-1/2 h-full p-4 gap-4">
@@ -516,7 +510,7 @@ export default function QuestionGroupPage() {
                   </div>
 
                 </div>
-                <DialogFooter className="px-6 py-4 border-t flex flex-row">
+                <div className="px-6 py-4 border-t flex flex-row">
                   <div className="w-1/2 flex justify-start items-center">
                     <div className="flex items-center justify-center pt-4">
                       <Label htmlFor="isActive" className="text-sm font-medium mr-2">
@@ -541,7 +535,7 @@ export default function QuestionGroupPage() {
                       )}
                     </Button>
                   </div>
-                </DialogFooter>
+                </div>
               </div>
             </form>
           </DialogContent>

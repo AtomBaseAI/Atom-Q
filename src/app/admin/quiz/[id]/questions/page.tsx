@@ -1,5 +1,7 @@
 "use client"
 
+// Updated: Added search and group filter to Add Questions popup
+
 import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -243,6 +245,11 @@ export default function QuizQuestionsPage() {
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all")
   const [groupFilter, setGroupFilter] = useState<string>("all")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  
+  // Popup-specific filter states
+  const [popupSearchTerm, setPopupSearchTerm] = useState("")
+  const [popupDifficultyFilter, setPopupDifficultyFilter] = useState<string>("all")
+  const [popupGroupFilter, setPopupGroupFilter] = useState<string>("all")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
@@ -399,6 +406,10 @@ export default function QuizQuestionsPage() {
         toast.success("Questions added to quiz")
         setIsAddDialogOpen(false)
         setSelectedQuestionsToAdd([])
+        // Reset popup filters when closing
+        setPopupSearchTerm("")
+        setPopupDifficultyFilter("all")
+        setPopupGroupFilter("all")
         fetchQuestions()
         fetchAvailableQuestions()
       } else {
@@ -721,6 +732,15 @@ export default function QuizQuestionsPage() {
     return matchesSearch && matchesDifficulty && matchesGroup
   })
 
+  // Popup-specific filtered questions
+  const popupFilteredQuestions = availableQuestions.filter(question => {
+    const matchesSearch = question.title.toLowerCase().includes(popupSearchTerm.toLowerCase()) ||
+      question.content.toLowerCase().includes(popupSearchTerm.toLowerCase())
+    const matchesDifficulty = popupDifficultyFilter === "all" || question.difficulty === popupDifficultyFilter
+    const matchesGroup = popupGroupFilter === "all" || question.group?.id === popupGroupFilter
+    return matchesSearch && matchesDifficulty && matchesGroup
+  })
+
   if (loading) {
     return <div className="flex items-center justify-center h-[80vh] "><HexagonLoader size={80} /></div>
   }
@@ -854,7 +874,7 @@ export default function QuizQuestionsPage() {
 
       {/* Add Questions Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] min-w-[70vw] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -866,10 +886,81 @@ export default function QuizQuestionsPage() {
         </div>
           </DialogHeader>
           <div className="grid flex-1 auto-rows-min gap-6 px-4">
+            {/* Search and Filter Controls */}
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search questions..."
+                    value={popupSearchTerm}
+                    onChange={(e) => setPopupSearchTerm(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+                <Select value={popupDifficultyFilter} onValueChange={setPopupDifficultyFilter}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Filter by difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Difficulties</SelectItem>
+                    <SelectItem value="EASY">Easy</SelectItem>
+                    <SelectItem value="MEDIUM">Medium</SelectItem>
+                    <SelectItem value="HARD">Hard</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={popupGroupFilter} onValueChange={setPopupGroupFilter}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Filter by group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Groups</SelectItem>
+                    {questionGroups.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.name} ({group._count.questions})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Active Filters Display */}
+              {(popupSearchTerm || popupDifficultyFilter !== "all" || popupGroupFilter !== "all") && (
+                <div className="flex flex-wrap gap-2">
+                  {popupSearchTerm && (
+                    <Badge variant="secondary" className="gap-1">
+                      Search: "{popupSearchTerm}"
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => setPopupSearchTerm("")}
+                      />
+                    </Badge>
+                  )}
+                  {popupDifficultyFilter !== "all" && (
+                    <Badge variant="secondary" className="gap-1">
+                      Difficulty: {popupDifficultyFilter}
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => setPopupDifficultyFilter("all")}
+                      />
+                    </Badge>
+                  )}
+                  {popupGroupFilter !== "all" && (
+                    <Badge variant="secondary" className="gap-1">
+                      Group: {questionGroups.find(g => g.id === popupGroupFilter)?.name || "Unknown"}
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => setPopupGroupFilter("all")}
+                      />
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
+            
             <div className="grid gap-3">
               <div className="max-h-96 overflow-y-auto border rounded-md">
-                {filteredAvailableQuestions.length > 0 ? (
-                  filteredAvailableQuestions.map((question) => (
+                {popupFilteredQuestions.length > 0 ? (
+                  popupFilteredQuestions.map((question) => (
                     <div key={question.id} className="flex items-center gap-3 p-3 hover:bg-muted/50 border-b last:border-b-0">
                       <input
                         type="checkbox"
@@ -886,7 +977,7 @@ export default function QuizQuestionsPage() {
                       />
                       <label htmlFor={`question-${question.id}`} className="flex-1 cursor-pointer">
                         <div className="font-medium">{question.title}</div>
-                        <div className="text-sm text-muted-foreground">{question.content}</div>
+                        {/* <div className="text-sm text-muted-foreground">{question.content}</div> */}
                         <div className="flex gap-2 mt-1">
                           <Badge variant={
                             question.type === QuestionType.MULTIPLE_CHOICE ? "default" :
@@ -919,7 +1010,17 @@ export default function QuizQuestionsPage() {
             </div>
           </div>
           <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsAddDialogOpen(false)
+                // Reset popup filters when cancelling
+                setPopupSearchTerm("")
+                setPopupDifficultyFilter("all")
+                setPopupGroupFilter("all")
+                setSelectedQuestionsToAdd([])
+              }}
+            >
               Cancel
             </Button>
             <Button 
