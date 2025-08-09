@@ -26,10 +26,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
-import { 
-  ArrowLeft, 
-  Search, 
-  UserPlus, 
+import {
+  ArrowLeft,
+  Search,
+  UserPlus,
   UserMinus,
   Users,
   BookOpen,
@@ -300,16 +300,16 @@ export default function QuizUsersPage() {
 
       {/* Enroll Users Dialog */}
       <Sheet open={isEnrollDialogOpen} onOpenChange={setIsEnrollDialogOpen}>
-        <SheetContent className="w-[400px] sm:w-[540px]">
+        <SheetContent className="min-w-[100vw] sm:w-[90vw]">
           <SheetHeader>
             <SheetTitle>Enroll Users</SheetTitle>
             <SheetDescription>
               Select users to enroll in this quiz
             </SheetDescription>
           </SheetHeader>
-          <div className="mt-6">
+          <div className="mt-6 px-4">
             <div className="space-y-4">
-              <div className="max-h-[400px] overflow-y-auto space-y-2">
+              <div className="max-h-[400px] min-h-[70vh] overflow-y-auto space-y-2">
                 {availableUsers.length > 0 ? (
                   availableUsers.map((user) => (
                     <div key={user.id} className="flex items-center space-x-3 p-2 border rounded">
@@ -346,15 +346,22 @@ export default function QuizUsersPage() {
             </div>
           </div>
           <SheetFooter className="mt-6">
-            <Button variant="outline" onClick={() => setIsEnrollDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleEnrollUsers}
-              disabled={selectedUsers.length === 0}
-            >
-              Enroll Selected Users ({selectedUsers.length})
-            </Button>
+            <div className="flex flex-row flex-1 gap-3 w-full justify-center items-center px-4">
+              <div className="w-1/2 flex justify-start items-center">
+                <Button variant="outline" onClick={() => setIsEnrollDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+              <div className="w-1/2 flex justify-end items-center">
+                <Button
+                  onClick={handleEnrollUsers}
+                  disabled={selectedUsers.length === 0}
+                >
+                  Enroll Selected Users ({selectedUsers.length})
+                </Button>
+
+              </div>
+            </div>
           </SheetFooter>
         </SheetContent>
       </Sheet>
@@ -365,7 +372,7 @@ export default function QuizUsersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Unenroll User</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to unenroll "{userToUnenroll?.name}" from this quiz? 
+              Are you sure you want to unenroll "{userToUnenroll?.name}" from this quiz?
               This action cannot be undone and will remove their quiz data.
             </AlertDialogDescription>
           </AlertDialogHeader>
