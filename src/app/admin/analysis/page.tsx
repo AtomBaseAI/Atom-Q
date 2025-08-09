@@ -286,7 +286,7 @@ export default function AnalysisPage() {
 
       {/* Leaderboard Dialog */}
       <Dialog open={isLeaderboardDialogOpen} onOpenChange={setIsLeaderboardDialogOpen}>
-        <DialogContent className="sm:max-w-[800px] max-h-[80vh]">
+        <DialogContent className="sm:max-w-[90vw] max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>Leaderboard - {selectedQuiz?.title}</DialogTitle>
             <DialogDescription>
@@ -361,7 +361,7 @@ export default function AnalysisPage() {
 
       {/* Result Matrix Dialog */}
       <Dialog open={isMatrixDialogOpen} onOpenChange={setIsMatrixDialogOpen}>
-        <DialogContent className="sm:max-w-[900px] max-h-[80vh]">
+        <DialogContent className="sm:max-w-[90vw] max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>Result Matrix - {selectedQuiz?.title}</DialogTitle>
             <DialogDescription>
