@@ -62,7 +62,18 @@ export async function GET(
 
     const results = attempt.quiz.quizQuestions.map(quizQuestion => {
       const userAnswer = attempt.answers.find(a => a.questionId === quizQuestion.question.id)
-      const isCorrect = userAnswer?.userAnswer === quizQuestion.question.correctAnswer
+      let isCorrect = false
+      
+      if (quizQuestion.question.type === "MULTI_SELECT") {
+        // For multi-select questions, check if all selected answers are correct
+        const correctAnswers = quizQuestion.question.correctAnswer.split('|').map(ans => ans.trim()).sort()
+        const userAnswers = userAnswer?.userAnswer ? userAnswer.userAnswer.split('|').map(ans => ans.trim()).sort() : []
+        isCorrect = JSON.stringify(correctAnswers) === JSON.stringify(userAnswers)
+      } else {
+        // For other question types, use exact string match
+        isCorrect = userAnswer?.userAnswer === quizQuestion.question.correctAnswer
+      }
+      
       if (isCorrect) correctAnswers++
 
       return {

@@ -11,6 +11,7 @@ import {
   BookOpen,
   BarChart3,
   Settings,
+  HelpCircle,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -33,10 +34,18 @@ const adminNavItems = [
     icon: BookOpen,
   },
   {
+    title: "Questions",
+    href: "/admin/questions",
+    icon: HelpCircle,
+  },
+  {
     title: "Analysis",
     href: "/admin/analysis",
     icon: BarChart3,
   },
+];
+
+const adminNavItemsEnd = [
   {
     title: "Settings",
     href: "/admin/settings",
@@ -83,6 +92,28 @@ export function AppSidebar({
       <ScrollArea className="flex-1 px-2 py-4">
         <nav className="space-y-1">
           {adminNavItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                )}
+              >
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                {open && <span>{item.title}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+        
+        {/* Bottom navigation items */}
+        <nav className="space-y-1 mt-auto">
+          {adminNavItemsEnd.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link

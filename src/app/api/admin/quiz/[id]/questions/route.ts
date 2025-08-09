@@ -114,6 +114,13 @@ export async function POST(
         )
       }
 
+      if (type === QuestionType.MULTI_SELECT && parsedOptions.length < 3) {
+        return NextResponse.json(
+          { message: "Multi-select questions must have at least 3 options" },
+          { status: 400 }
+        )
+      }
+
       if (type === QuestionType.TRUE_FALSE) {
         // For True/False, ensure we have exactly 2 options or use default
         if (parsedOptions.length !== 2) {
@@ -121,12 +128,29 @@ export async function POST(
         }
       }
 
-      // Validate that correct answer is in options
-      if (!parsedOptions.includes(correctAnswer)) {
-        return NextResponse.json(
-          { message: "Correct answer must be one of the options" },
-          { status: 400 }
-        )
+      // Validate that correct answer is in options (except for fill-in-the-blank questions)
+      if (type !== QuestionType.FILL_IN_BLANK) {
+        // For multiple choice and true/false questions, validate that correct answer is in options
+        if (type === QuestionType.MULTIPLE_CHOICE || type === QuestionType.TRUE_FALSE) {
+          if (!parsedOptions.includes(correctAnswer)) {
+            return NextResponse.json(
+              { message: "Correct answer must be one of the options" },
+              { status: 400 }
+            )
+          }
+        }
+        // For multi-select questions, validate that all correct answers are in options
+        if (type === QuestionType.MULTI_SELECT) {
+          const correctAnswers = correctAnswer.split('|').map(ans => ans.trim())
+          for (const answer of correctAnswers) {
+            if (!parsedOptions.includes(answer)) {
+              return NextResponse.json(
+                { message: `Correct answer "${answer}" must be one of the options` },
+                { status: 400 }
+              )
+            }
+          }
+        }
       }
 
       // Create the question

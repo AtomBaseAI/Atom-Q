@@ -21,8 +21,23 @@ model User {
   quizAttempts   QuizAttempt[]
   quizUsers      QuizUser[]
   createdQuizzes Quiz[]        @relation("QuizCreator")
+  questionGroups QuestionGroup[]
 
   @@map("users")
+}
+
+model QuestionGroup {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  questions   Question[]
+  creatorId   String
+  creator     User      @relation(fields: [creatorId], references: [id])
+
+  @@map("question_groups")
 }
 
 model Question {
@@ -38,6 +53,8 @@ model Question {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   quizQuestions QuizQuestion[]
+  groupId       String?
+  group         QuestionGroup?  @relation(fields: [groupId], references: [id])
 
   @@map("questions")
 }
@@ -150,6 +167,7 @@ enum QuestionType {
   MULTIPLE_CHOICE
   TRUE_FALSE
   FILL_IN_BLANK
+  MULTI_SELECT
 }
 
 enum DifficultyLevel {

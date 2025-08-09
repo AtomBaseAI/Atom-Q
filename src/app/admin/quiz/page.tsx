@@ -50,7 +50,8 @@ import {
   Eye,
   Users,
   FileQuestion,
-  ArrowUpDown
+  ArrowUpDown,
+  Loader2
 } from "lucide-react"
 import { toasts } from "@/lib/toasts"
 import { DifficultyLevel, QuizStatus } from "@prisma/client"
@@ -120,6 +121,8 @@ export default function QuizzesPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null)
   const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null)
+  const [submitLoading, setSubmitLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
 
   // Separate form states for create and edit
   const [createFormData, setCreateFormData] = useState<CreateFormData>({
@@ -313,6 +316,7 @@ export default function QuizzesPage() {
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitLoading(true)
 
     try {
       const response = await fetch("/api/admin/quiz", {
@@ -341,11 +345,14 @@ export default function QuizzesPage() {
       }
     } catch (error) {
       toasts.actionFailed("Quiz creation")
+    } finally {
+      setSubmitLoading(false)
     }
   }
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitLoading(true)
 
     if (!selectedQuiz) return
 
@@ -377,11 +384,14 @@ export default function QuizzesPage() {
       }
     } catch (error) {
       toasts.actionFailed("Quiz update")
+    } finally {
+      setSubmitLoading(false)
     }
   }
 
   const handleDeleteQuiz = async (quizId: string) => {
     try {
+      setDeleteLoading(quizId)
       const response = await fetch(`/api/admin/quiz/${quizId}`, {
         method: "DELETE",
       })
@@ -397,6 +407,8 @@ export default function QuizzesPage() {
       }
     } catch (error) {
       toasts.actionFailed("Quiz deletion")
+    } finally {
+      setDeleteLoading(null)
     }
   }
 

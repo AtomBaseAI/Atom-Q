@@ -68,6 +68,7 @@ export async function PUT(
       randomOrder,
       maxAttempts,
       showAnswers,
+      checkAnswerEnabled,
       startTime,
       endTime
     } = await request.json()
@@ -85,6 +86,7 @@ export async function PUT(
         randomOrder,
         maxAttempts,
         showAnswers,
+        checkAnswerEnabled,
         startTime: startTime ? new Date(startTime) : null,
         endTime: endTime ? new Date(endTime) : null
       }

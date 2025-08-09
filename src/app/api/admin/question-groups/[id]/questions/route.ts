@@ -5,7 +5,8 @@ import { db } from "@/lib/db"
 import { UserRole, QuestionType, DifficultyLevel } from "@prisma/client"
 
 export async function GET(
-  request: NextRequest
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -17,19 +18,24 @@ export async function GET(
       )
     }
 
-    const { searchParams } = new URL(request.url)
-    const quizId = searchParams.get('quizId')
+    const { id } = await params
+
+    // Check if question group exists
+    const questionGroup = await db.questionGroup.findUnique({
+      where: { id }
+    })
+
+    if (!questionGroup) {
+      return NextResponse.json(
+        { message: "Question group not found" },
+        { status: 404 }
+      )
+    }
 
     const questions = await db.question.findMany({
       where: { 
-        isActive: true,
-        ...(quizId && {
-          quizQuestions: {
-            none: {
-              quizId
-            }
-          }
-        })
+        groupId: id,
+        isActive: true 
       },
       orderBy: {
         createdAt: "desc"
@@ -38,7 +44,7 @@ export async function GET(
 
     return NextResponse.json(questions)
   } catch (error) {
-    console.error("Error fetching questions:", error)
+    console.error("Error fetching questions in group:", error)
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }
@@ -47,7 +53,8 @@ export async function GET(
 }
 
 export async function POST(
-  request: NextRequest
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -59,6 +66,7 @@ export async function POST(
       )
     }
 
+    const { id } = await params
     const body = await request.json()
     const {
       title,
@@ -68,9 +76,20 @@ export async function POST(
       correctAnswer,
       explanation,
       difficulty,
-      categoryId,
       isActive = true
     } = body
+
+    // Check if question group exists
+    const questionGroup = await db.questionGroup.findUnique({
+      where: { id }
+    })
+
+    if (!questionGroup) {
+      return NextResponse.json(
+        { message: "Question group not found" },
+        { status: 404 }
+      )
+    }
 
     // Validate required fields
     if (!title || !content || !type || !options || !correctAnswer) {
@@ -139,13 +158,14 @@ export async function POST(
         correctAnswer,
         explanation,
         difficulty: difficulty || DifficultyLevel.MEDIUM,
-        isActive
+        isActive,
+        groupId: id
       }
     })
 
     return NextResponse.json(question, { status: 201 })
   } catch (error) {
-    console.error("Error creating question:", error)
+    console.error("Error creating question in group:", error)
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }

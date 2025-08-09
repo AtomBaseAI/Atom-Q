@@ -51,7 +51,17 @@ export async function POST(
     }
 
     // Check if the answer is correct
-    const isCorrect = answer.trim().toLowerCase() === question.correctAnswer.trim().toLowerCase()
+    let isCorrect = false
+    
+    if (question.type === "MULTI_SELECT") {
+      // For multi-select questions, check if all selected answers are correct
+      const correctAnswers = question.correctAnswer.split('|').map(ans => ans.trim()).sort()
+      const userAnswers = answer ? answer.split('|').map(ans => ans.trim()).sort() : []
+      isCorrect = JSON.stringify(correctAnswers) === JSON.stringify(userAnswers)
+    } else {
+      // For other question types, use exact string match (case-insensitive)
+      isCorrect = answer.trim().toLowerCase() === question.correctAnswer.trim().toLowerCase()
+    }
 
     // Save or update the answer
     await db.quizAnswer.upsert({

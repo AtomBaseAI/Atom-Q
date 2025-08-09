@@ -12,7 +12,31 @@ export const createQuestionSchema = z.object({
   explanation: z.string().optional(),
   difficulty: z.nativeEnum(DifficultyLevel).default(DifficultyLevel.MEDIUM),
   points: z.number().positive().default(1.0),
-})
+}).superRefine((data, ctx) => {
+  // For multiple choice and true/false questions, validate that correct answer is in options
+  if (data.type !== QuestionType.FILL_IN_BLANK && data.type !== QuestionType.MULTI_SELECT) {
+    if (!data.options.includes(data.correctAnswer)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Correct answer must be one of the options",
+        path: ["correctAnswer"],
+      });
+    }
+  }
+  // For multi-select questions, validate that all correct answers are in options
+  if (data.type === QuestionType.MULTI_SELECT) {
+    const correctAnswers = data.correctAnswer.split('|').map(ans => ans.trim());
+    for (const answer of correctAnswers) {
+      if (!data.options.includes(answer)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Correct answer "${answer}" must be one of the options`,
+          path: ["correctAnswer"],
+        });
+      }
+    }
+  }
+});
 
 // Update question schema
 export const updateQuestionSchema = z.object({
@@ -24,7 +48,31 @@ export const updateQuestionSchema = z.object({
   explanation: z.string().optional(),
   difficulty: z.nativeEnum(DifficultyLevel).optional(),
   isActive: z.boolean().optional(),
-})
+}).superRefine((data, ctx) => {
+  // For multiple choice and true/false questions, validate that correct answer is in options
+  if (data.type && data.type !== QuestionType.FILL_IN_BLANK && data.type !== QuestionType.MULTI_SELECT && data.options && data.correctAnswer) {
+    if (!data.options.includes(data.correctAnswer)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Correct answer must be one of the options",
+        path: ["correctAnswer"],
+      });
+    }
+  }
+  // For multi-select questions, validate that all correct answers are in options
+  if (data.type === QuestionType.MULTI_SELECT && data.options && data.correctAnswer) {
+    const correctAnswers = data.correctAnswer.split('|').map(ans => ans.trim());
+    for (const answer of correctAnswers) {
+      if (!data.options.includes(answer)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Correct answer "${answer}" must be one of the options`,
+          path: ["correctAnswer"],
+        });
+      }
+    }
+  }
+});
 
 // Bulk import questions schema
 export const bulkImportQuestionsSchema = z.object({

@@ -45,7 +45,8 @@ import {
   Upload,
   Edit,
   Trash2,
-  ArrowUpDown
+  ArrowUpDown,
+  Loader2
 } from "lucide-react"
 import { toasts } from "@/lib/toasts"
 import { UserRole } from "@prisma/client"
@@ -81,6 +82,8 @@ export default function UsersPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [submitLoading, setSubmitLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
@@ -223,6 +226,7 @@ export default function UsersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const isEditing = selectedUser !== null
+    setSubmitLoading(true)
 
     try {
       const url = isEditing ? `/api/admin/users/${selectedUser.id}` : "/api/admin/users"
@@ -249,11 +253,14 @@ export default function UsersPage() {
       }
     } catch (error) {
       toasts.actionFailed(isEditing ? "User update" : "User creation")
+    } finally {
+      setSubmitLoading(false)
     }
   }
 
   const handleDeleteUser = async (userId: string) => {
     try {
+      setDeleteLoading(userId)
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: "DELETE",
       })
@@ -269,6 +276,8 @@ export default function UsersPage() {
       }
     } catch (error) {
       toasts.actionFailed("User deletion")
+    } finally {
+      setDeleteLoading(null)
     }
   }
 
@@ -486,7 +495,16 @@ export default function UsersPage() {
               <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Create User</Button>
+              <Button type="submit" disabled={submitLoading}>
+                {submitLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create User"
+                )}
+              </Button>
             </SheetFooter>
           </form>
         </SheetContent>
@@ -566,7 +584,16 @@ export default function UsersPage() {
               <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Update User</Button>
+              <Button type="submit" disabled={submitLoading}>
+                {submitLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update User"
+                )}
+              </Button>
             </SheetFooter>
           </form>
         </SheetContent>
@@ -591,8 +618,16 @@ export default function UsersPage() {
             <AlertDialogAction
               onClick={() => userToDelete && handleDeleteUser(userToDelete.id)}
               className="bg-red-600 hover:bg-red-700"
+              disabled={deleteLoading === userToDelete?.id}
             >
-              Delete User
+              {deleteLoading === userToDelete?.id ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete User"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

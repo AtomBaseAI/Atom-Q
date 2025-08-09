@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
+import { RichTextDisplay } from "@/components/ui/rich-text-display"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { 
@@ -59,12 +62,14 @@ export default function QuizTakingPage() {
   const [attemptId, setAttemptId] = useState<string>("")
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [multiSelectAnswers, setMultiSelectAnswers] = useState<Record<string, string[]>>({})
   const [timeRemaining, setTimeRemaining] = useState<number>(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showAnswer, setShowAnswer] = useState<string | null>(null)
   const [canShowAnswers, setCanShowAnswers] = useState(false)
+  const [checkedAnswers, setCheckedAnswers] = useState<Set<string>>(new Set())
 
   const fetchQuiz = useCallback(async () => {
     try {
@@ -130,7 +135,47 @@ export default function QuizTakingPage() {
       const timer = setInterval(() => {
         setTimeRemaining((prev) => {
           if (prev <= 1) {
-            handleSubmit()
+            // Auto-submit when time runs out
+            ;(async () => {
+              try {
+                setSubmitting(true)
+                
+                // Prepare answers for submission
+                const finalAnswers: Record<string, string> = { ...answers }
+                
+                // Convert multi-select answers to pipe-separated string
+                Object.keys(multiSelectAnswers).forEach(questionId => {
+                  const selectedOptions = multiSelectAnswers[questionId]
+                  if (selectedOptions.length > 0) {
+                    finalAnswers[questionId] = selectedOptions.join('|')
+                  }
+                })
+                
+                const response = await fetch(`/api/user/quiz/${params.id}/submit`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    attemptId,
+                    answers: finalAnswers,
+                  }),
+                })
+
+                if (response.ok) {
+                  const result = await response.json()
+                  toasts.success("Time's up! Quiz submitted automatically.")
+                  router.push(`/user/quiz/${params.id}/result?attemptId=${attemptId}`)
+                } else {
+                  const error = await response.json()
+                  toasts.error(error.message || "Failed to submit quiz")
+                }
+              } catch (error) {
+                toasts.error("Failed to submit quiz")
+              } finally {
+                setSubmitting(false)
+              }
+            })()
             return 0
           }
           return prev - 1
@@ -139,7 +184,7 @@ export default function QuizTakingPage() {
 
       return () => clearInterval(timer)
     }
-  }, [timeRemaining, submitting])
+  }, [timeRemaining, submitting, attemptId, answers, params.id, router])
 
   // Fullscreen handling
   useEffect(() => {
@@ -164,14 +209,47 @@ export default function QuizTakingPage() {
   }
 
   const handleAnswerChange = (questionId: string, answer: string) => {
+    // Prevent changing answer if it has been checked
+    if (checkedAnswers.has(questionId)) {
+      return
+    }
     setAnswers(prev => ({
       ...prev,
       [questionId]: answer
     }))
   }
 
+  const handleMultiSelectAnswerChange = (questionId: string, option: string, checked: boolean) => {
+    // Prevent changing answer if it has been checked
+    if (checkedAnswers.has(questionId)) {
+      return
+    }
+    
+    setMultiSelectAnswers(prev => {
+      const currentAnswers = prev[questionId] || []
+      let newAnswers: string[]
+      
+      if (checked) {
+        newAnswers = [...currentAnswers, option]
+      } else {
+        newAnswers = currentAnswers.filter(ans => ans !== option)
+      }
+      
+      return {
+        ...prev,
+        [questionId]: newAnswers
+      }
+    })
+  }
+
   const handleCheckAnswer = (questionId: string) => {
-    setShowAnswer(prev => (prev === questionId ? null : questionId))
+    if (showAnswer === questionId) {
+      setShowAnswer(null)
+    } else {
+      setShowAnswer(questionId)
+      // Add this question to checked answers set to lock it
+      setCheckedAnswers(prev => new Set(prev).add(questionId))
+    }
   }
 
   const nextQuestion = () => {
@@ -189,6 +267,17 @@ export default function QuizTakingPage() {
   const handleSubmit = async () => {
     if (submitting) return
 
+    // Prepare answers for submission
+    const finalAnswers: Record<string, string> = { ...answers }
+    
+    // Convert multi-select answers to pipe-separated string
+    Object.keys(multiSelectAnswers).forEach(questionId => {
+      const selectedOptions = multiSelectAnswers[questionId]
+      if (selectedOptions.length > 0) {
+        finalAnswers[questionId] = selectedOptions.join('|')
+      }
+    })
+
     setSubmitting(true)
     try {
       const response = await fetch(`/api/user/quiz/${params.id}/submit`, {
@@ -198,7 +287,7 @@ export default function QuizTakingPage() {
         },
         body: JSON.stringify({
           attemptId,
-          answers,
+          answers: finalAnswers,
         }),
       })
 
@@ -221,6 +310,43 @@ export default function QuizTakingPage() {
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+  }
+
+  const formatQuestionType = (type: QuestionType) => {
+    switch (type) {
+      case QuestionType.MULTIPLE_CHOICE:
+        return "Multiple Choice"
+      case QuestionType.TRUE_FALSE:
+        return "True/False"
+      case QuestionType.FILL_IN_BLANK:
+        return "Fill in Blank"
+      case QuestionType.MULTI_SELECT:
+        return "Multi-Select"
+      default:
+        return "Unknown"
+    }
+  }
+
+  const getQuestionTypeColor = (type: QuestionType) => {
+    switch (type) {
+      case QuestionType.MULTIPLE_CHOICE:
+        return "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30"
+      case QuestionType.TRUE_FALSE:
+        return "text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/30"
+      case QuestionType.FILL_IN_BLANK:
+        return "text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-900/30"
+      case QuestionType.MULTI_SELECT:
+        return "text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/30"
+      default:
+        return "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-900/30"
+    }
+  }
+
+  const isQuestionAnswered = (question: Question) => {
+    if (question.type === QuestionType.MULTI_SELECT) {
+      return multiSelectAnswers[question.id]?.length > 0
+    }
+    return answers[question.id]
   }
 
   const getTimeColor = () => {
@@ -259,7 +385,9 @@ export default function QuizTakingPage() {
 
   const currentQuestion = quiz.questions[currentQuestionIndex]
   const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100
-  const isAnswered = answers[currentQuestion.id]
+  const isAnswered = currentQuestion.type === QuestionType.MULTI_SELECT 
+    ? multiSelectAnswers[currentQuestion.id]?.length > 0 
+    : answers[currentQuestion.id]
   const isLastQuestion = currentQuestionIndex === quiz.questions.length - 1
 
   return (
@@ -303,6 +431,18 @@ export default function QuizTakingPage() {
                 {formatTime(timeRemaining)}
               </span>
             </div>
+            
+            {/* Question Type Display */}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-muted-foreground">Type:</span>
+              <Badge 
+                variant="outline" 
+                className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${getQuestionTypeColor(currentQuestion.type)}`}
+              >
+                {formatQuestionType(currentQuestion.type)}
+              </Badge>
+            </div>
+            
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -345,82 +485,210 @@ export default function QuizTakingPage() {
                       {currentQuestion.points} {currentQuestion.points === 1 ? 'point' : 'points'}
                     </Badge>
                   </div>
-                  {quiz.checkAnswerEnabled && (
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCheckAnswer(currentQuestion.id)}
-                        className="bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:hover:bg-yellow-900/30"
-                      >
-                        {showAnswer === currentQuestion.id ? (
-                          <>
-                            <EyeOff className="h-4 w-4 mr-1" />
-                            Hide Answer
-                          </>
-                        ) : (
-                          <>
-                            <Eye className="h-4 w-4 mr-1" />
-                            Check Answer
-                          </>
-                        )}
-                      </Button>
-                    </motion.div>
-                  )}
                 </div>
                 <CardTitle className="text-xl leading-relaxed">
-                  {currentQuestion.content}
+                  <RichTextDisplay content={currentQuestion.content} />
                 </CardTitle>
               </CardHeader>
 
               <CardContent className="space-y-6">
-                <RadioGroup
-                  value={answers[currentQuestion.id] || ""}
-                  onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
-                >
-                  {currentQuestion.options.map((option: string, index: number) => {
-                    const isCorrect = showAnswer === currentQuestion.id && index.toString() === currentQuestion.correctAnswer
-                    const isSelected = answers[currentQuestion.id] === option
+                {/* Multiple Choice & True/False Questions */}
+                {(currentQuestion.type === QuestionType.MULTIPLE_CHOICE || currentQuestion.type === QuestionType.TRUE_FALSE) && (
+                  <RadioGroup
+                    value={answers[currentQuestion.id] || ""}
+                    onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
+                    disabled={checkedAnswers.has(currentQuestion.id)}
+                  >
+                    {currentQuestion.options.map((option: string, index: number) => {
+                      const isCorrect = showAnswer === currentQuestion.id && option === currentQuestion.correctAnswer
+                      const isSelected = answers[currentQuestion.id] === option
+                      const isLocked = checkedAnswers.has(currentQuestion.id)
 
-                    return (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition-all duration-200 ${
-                          isSelected 
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                            : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
-                        } ${
-                          isCorrect 
-                            ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
+                      return (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition-all duration-200 ${
+                            isSelected 
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                              : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
+                          } ${
+                            isCorrect 
+                              ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
+                              : ''
+                          } ${
+                            isLocked 
+                              ? 'opacity-75 cursor-not-allowed' 
+                              : ''
+                          }`}
+                        >
+                          <RadioGroupItem 
+                            value={option} 
+                            id={`option-${index}`} 
+                            disabled={isLocked}
+                          />
+                          <Label 
+                            htmlFor={`option-${index}`} 
+                            className={`cursor-pointer flex-1 text-base ${isLocked ? 'cursor-not-allowed' : ''}`}
+                          >
+                            {option}
+                          </Label>
+                          {isCorrect && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="text-green-500"
+                            >
+                              <Check className="h-5 w-5" />
+                            </motion.div>
+                          )}
+                          {isLocked && !isCorrect && isSelected && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="text-yellow-500"
+                            >
+                              <HelpCircle className="h-5 w-5" />
+                            </motion.div>
+                          )}
+                        </motion.div>
+                      )
+                    })}
+                  </RadioGroup>
+                )}
+
+                {/* Multi-Select Questions */}
+                {currentQuestion.type === QuestionType.MULTI_SELECT && (
+                  <div className="space-y-3">
+                    {currentQuestion.options.map((option: string, index: number) => {
+                      const correctAnswers = currentQuestion.correctAnswer.split('|')
+                      const isCorrect = showAnswer === currentQuestion.id && correctAnswers.includes(option)
+                      const isSelected = multiSelectAnswers[currentQuestion.id]?.includes(option) || false
+                      const isLocked = checkedAnswers.has(currentQuestion.id)
+
+                      return (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition-all duration-200 ${
+                            isSelected 
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                              : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
+                          } ${
+                            isCorrect 
+                              ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
+                              : ''
+                          } ${
+                            isLocked 
+                              ? 'opacity-75 cursor-not-allowed' 
+                              : ''
+                          }`}
+                        >
+                          <Checkbox
+                            id={`option-${index}`}
+                            checked={isSelected}
+                            onCheckedChange={(checked) => 
+                              handleMultiSelectAnswerChange(currentQuestion.id, option, checked as boolean)
+                            }
+                            disabled={isLocked}
+                          />
+                          <Label 
+                            htmlFor={`option-${index}`} 
+                            className={`cursor-pointer flex-1 text-base ${isLocked ? 'cursor-not-allowed' : ''}`}
+                          >
+                            {option}
+                          </Label>
+                          {isCorrect && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="text-green-500"
+                            >
+                              <Check className="h-5 w-5" />
+                            </motion.div>
+                          )}
+                          {isLocked && !isCorrect && isSelected && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="text-yellow-500"
+                            >
+                              <HelpCircle className="h-5 w-5" />
+                            </motion.div>
+                          )}
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* Fill-in-the-Blank Questions */}
+                {currentQuestion.type === QuestionType.FILL_IN_BLANK && (
+                  <div className="space-y-4">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-2"
+                    >
+                      <Label htmlFor="fill-blank-answer" className="text-base font-medium">
+                        Your Answer:
+                      </Label>
+                      <Input
+                        id="fill-blank-answer"
+                        value={answers[currentQuestion.id] || ""}
+                        onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+                        placeholder="Type your answer here..."
+                        disabled={checkedAnswers.has(currentQuestion.id)}
+                        className={`text-base p-4 border-2 transition-all duration-200 focus:border-blue-500 ${
+                          checkedAnswers.has(currentQuestion.id) 
+                            ? 'opacity-75 cursor-not-allowed bg-gray-50 dark:bg-gray-800' 
                             : ''
                         }`}
-                      >
-                        <RadioGroupItem value={option} id={`option-${index}`} />
-                        <Label 
-                          htmlFor={`option-${index}`} 
-                          className="cursor-pointer flex-1 text-base"
+                      />
+                      {showAnswer === currentQuestion.id && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`p-3 rounded-lg border-2 ${
+                            answers[currentQuestion.id] === currentQuestion.correctAnswer
+                              ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                              : 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                          }`}
                         >
-                          {option}
-                        </Label>
-                        {isCorrect && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="text-green-500"
-                          >
-                            <Check className="h-5 w-5" />
-                          </motion.div>
-                        )}
-                      </motion.div>
-                    )
-                  })}
-                </RadioGroup>
+                          <div className="flex items-center space-x-2">
+                            {answers[currentQuestion.id] === currentQuestion.correctAnswer ? (
+                              <Check className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <X className="h-5 w-5 text-red-500" />
+                            )}
+                            <span className="font-medium">
+                              {answers[currentQuestion.id] === currentQuestion.correctAnswer 
+                                ? "Correct!" 
+                                : `Incorrect. The correct answer is: ${currentQuestion.correctAnswer}`
+                              }
+                            </span>
+                          </div>
+                        </motion.div>
+                      )}
+                      {checkedAnswers.has(currentQuestion.id) && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex items-center space-x-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800"
+                        >
+                          <HelpCircle className="h-4 w-4 text-yellow-600" />
+                          <span className="text-sm text-yellow-800 dark:text-yellow-200">
+                            Answer locked - You cannot change it after checking
+                          </span>
+                        </motion.div>
+                      )}
+                    </motion.div>
+                  </div>
+                )}
 
                 {showAnswer === currentQuestion.id && currentQuestion.explanation && (
                   <motion.div
@@ -431,7 +699,10 @@ export default function QuizTakingPage() {
                     <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
                       <Zap className="h-4 w-4" />
                       <AlertDescription className="text-green-800 dark:text-green-200">
-                        <strong>Explanation:</strong> {currentQuestion.explanation}
+                        <div className="space-y-2">
+                          <strong className="block">Explanation:</strong>
+                          <RichTextDisplay content={currentQuestion.explanation} />
+                        </div>
                       </AlertDescription>
                     </Alert>
                   </motion.div>
@@ -489,7 +760,12 @@ export default function QuizTakingPage() {
                           Correct Answer:
                         </p>
                         <p className="text-green-700 dark:text-green-300">
-                          {currentQuestion.options[parseInt(currentQuestion.correctAnswer)]}
+                          {currentQuestion.type === QuestionType.MULTI_SELECT 
+                            ? currentQuestion.correctAnswer.split('|').join(', ')
+                            : currentQuestion.type === QuestionType.FILL_IN_BLANK
+                            ? currentQuestion.correctAnswer
+                            : currentQuestion.options[parseInt(currentQuestion.correctAnswer)]
+                          }
                         </p>
                       </div>
                     </div>
@@ -500,9 +776,9 @@ export default function QuizTakingPage() {
                       <p className="font-medium text-blue-800 dark:text-blue-200 mb-1">
                         Explanation:
                       </p>
-                      <p className="text-blue-700 dark:text-blue-300">
-                        {currentQuestion.explanation}
-                      </p>
+                      <div className="text-blue-700 dark:text-blue-300">
+                        <RichTextDisplay content={currentQuestion.explanation} />
+                      </div>
                     </div>
                   )}
                 </motion.div>
@@ -542,7 +818,7 @@ export default function QuizTakingPage() {
                 className={`w-8 h-8 rounded-full text-sm font-medium transition-all ${
                   index === currentQuestionIndex
                     ? 'bg-blue-500 text-white shadow-lg'
-                    : answers[quiz.questions[index].id]
+                    : isQuestionAnswered(quiz.questions[index])
                     ? 'bg-green-500 text-white'
                     : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
                 }`}
@@ -555,7 +831,49 @@ export default function QuizTakingPage() {
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            className="flex items-center space-x-2"
           >
+            {/* Instant Check Answer Button */}
+            {quiz.checkAnswerEnabled && (
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  variant="outline"
+                  onClick={() => handleCheckAnswer(currentQuestion.id)}
+                  disabled={!isAnswered && showAnswer !== currentQuestion.id}
+                  className={`
+                    ${showAnswer === currentQuestion.id 
+                      ? 'bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:hover:bg-yellow-900/30 border-yellow-300' 
+                      : 'bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 border-blue-300'
+                    }
+                    ${checkedAnswers.has(currentQuestion.id) 
+                      ? 'opacity-75 cursor-not-allowed' 
+                      : ''
+                    }
+                  `}
+                >
+                  {showAnswer === currentQuestion.id ? (
+                    <>
+                      <EyeOff className="h-4 w-4 mr-1" />
+                      Hide Answer
+                    </>
+                  ) : checkedAnswers.has(currentQuestion.id) ? (
+                    <>
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Answer Checked
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="h-4 w-4 mr-1" />
+                      Check Answer
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            )}
+
             {isLastQuestion ? (
               <Button
                 onClick={handleSubmit}

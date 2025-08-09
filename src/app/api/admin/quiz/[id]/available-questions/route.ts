@@ -22,6 +22,7 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     const difficulty = searchParams.get("difficulty")
     const search = searchParams.get("search")
+    const groupId = searchParams.get("groupId")
 
     // Get questions not already in this quiz
     const existingQuestionIds = await db.quizQuestion.findMany({
@@ -42,6 +43,11 @@ export async function GET(
       }
     }
 
+    // Add group filter
+    if (groupId) {
+      whereClause.groupId = groupId
+    }
+
     // Add filters
     if (difficulty) {
       whereClause.difficulty = difficulty
@@ -56,6 +62,14 @@ export async function GET(
 
     const questions = await db.question.findMany({
       where: whereClause,
+      include: {
+        group: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      },
       orderBy: { createdAt: "desc" }
     })
 

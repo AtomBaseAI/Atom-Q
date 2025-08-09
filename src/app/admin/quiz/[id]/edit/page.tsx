@@ -26,7 +26,9 @@ import {
   Plus,
   Minus,
   Check,
-  AlertTriangle
+  AlertTriangle,
+  CheckCircle,
+  HelpCircle
 } from "lucide-react"
 import { toasts } from "@/lib/toasts"
 import { DifficultyLevel, QuizStatus } from "@prisma/client"
@@ -43,6 +45,7 @@ interface Quiz {
   randomOrder: boolean
   maxAttempts?: number
   showAnswers: boolean
+  checkAnswerEnabled: boolean
   startTime?: string
   endTime?: string
 }
@@ -263,6 +266,28 @@ export default function EditQuizPage() {
                 <Switch
                   checked={quiz.showAnswers}
                   onCheckedChange={(checked) => updateQuiz("showAnswers", checked)}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">Instant Answer Check</Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow students to check answers instantly with explanation (locks answer after checking)
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                {quiz.checkAnswerEnabled ? (
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                ) : (
+                  <HelpCircle className="h-4 w-4 text-gray-400" />
+                )}
+                <Switch
+                  checked={quiz.checkAnswerEnabled}
+                  onCheckedChange={(checked) => updateQuiz("checkAnswerEnabled", checked)}
                 />
               </div>
             </div>
