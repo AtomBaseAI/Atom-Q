@@ -33,7 +33,8 @@ import {
   UserMinus,
   Users,
   BookOpen,
-  ArrowUpDown
+  ArrowUpDown,
+  ChevronLeft
 } from "lucide-react"
 import { toasts } from "@/lib/toasts"
 import { DataTable } from "@/components/ui/data-table"
@@ -224,76 +225,43 @@ export default function QuizUsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.back()}
-          className="h-9"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Quiz Users</h1>
-          <p className="text-muted-foreground">
-            Manage user enrollment for "{quiz?.title}"
-          </p>
-        </div>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Quiz Title</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-medium truncate">{quiz?.title}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Difficulty</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Badge variant={quiz?.difficulty === 'HARD' ? 'destructive' : quiz?.difficulty === 'MEDIUM' ? 'default' : 'secondary'}>
-              {quiz?.difficulty}
-            </Badge>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 w-[300px]"
-            />
+      <div className="flex items-center justify-center">
+        <div className="flex flex-row justify-start items-center w-1/2 gap-1">
+          <div className="h-full flex flex-row drak:bg-slate-400 mr-2">
+            <h1 className="mr-1">{quiz?.title} </h1> (<p>{users.length}</p>) 
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search users..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8 w-[300px]"
+              />
+            </div>
           </div>
         </div>
-        <Button
-          onClick={() => {
-            fetchAvailableUsers()
-            setIsEnrollDialogOpen(true)
-          }}
-        >
-          <UserPlus className="h-4 w-4 mr-2" />
-          Enroll Users
-        </Button>
+        <div className="flex flex-row justify-end items-center w-1/2 gap-1">
+          <Button
+            onClick={() => {
+              fetchAvailableUsers()
+              setIsEnrollDialogOpen(true)
+            }}
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            Enroll Users
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.back()}
+            className="h-9"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <DataTable columns={columns} data={filteredUsers} />
@@ -309,7 +277,7 @@ export default function QuizUsersPage() {
           </SheetHeader>
           <div className="mt-6 px-4">
             <div className="space-y-4">
-              <div className="max-h-[400px] min-h-[70vh] overflow-y-auto space-y-2">
+              <div className="min-h-[60vh] overflow-y-auto space-y-2">
                 {availableUsers.length > 0 ? (
                   availableUsers.map((user) => (
                     <div key={user.id} className="flex items-center space-x-3 p-2 border rounded">

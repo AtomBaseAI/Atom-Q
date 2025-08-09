@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { Plus, Edit, Trash2, ArrowLeft, Loader2 } from "lucide-react"
+import { Plus, Edit, Trash2, ArrowLeft, Loader2, ChevronLeft } from "lucide-react"
 import { format } from "date-fns"
 import { QuestionType, DifficultyLevel } from "@prisma/client"
 import HexagonLoader from "@/components/Loader/Loading"
@@ -314,232 +314,227 @@ export default function QuestionGroupPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center space-x-4">
-        <Button variant="outline" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{questionGroup.name}</h1>
-          <p className="text-muted-foreground">
-            {questionGroup.description || "Manage questions in this group"}
-          </p>
+      <div className="flex justify-center items-center">
+        <div className="w-1/2 flex flex-row justify-start items-center">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-3xl font-bold tracking-tight">{questionGroup.name}</h1>
+            <Badge variant={questionGroup.isActive ? "default" : "secondary"}>
+              {questionGroup.isActive ? "Active" : "Inactive"}
+            </Badge>
+            <span className="text-sm text-muted-foreground">
+              Created {format(new Date(questionGroup.createdAt), "MMM d, yyyy")}
+            </span>
+          </div>
         </div>
-      </div>
-
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <Badge variant={questionGroup.isActive ? "default" : "secondary"}>
-            {questionGroup.isActive ? "Active" : "Inactive"}
-          </Badge>
-          <span className="text-sm text-muted-foreground">
-            Created {format(new Date(questionGroup.createdAt), "MMM d, yyyy")}
-          </span>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Question
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="min-w-[90vw] w-full p-0 m-0 rounded-none">
-            <form onSubmit={handleSubmit} className="flex flex-col h-full w-full">
-              <div className="flex flex-col h-full w-full">
-                <DialogHeader className="px-6 pt-6 pb-4 border-b">
-                  <DialogTitle>
-                    {editingQuestion ? "Edit Question" : "Create Question"}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="flex flex-row flex-1 overflow-y-auto px-6 py-4 space-y-6 gap-4">
-                  <div className="flex flex-col flex-1 w-1/2 h-full p-4 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="title" className="text-sm font-medium">
-                        Title
-                      </Label>
-                      <Input
-                        id="title"
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        placeholder="Enter question title"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="type" className="text-sm font-medium">
-                        Type
-                      </Label>
-                      <Select
-                        value={formData.type}
-                        onValueChange={(value) => {
-                          const newType = value as QuestionType
-                          // Ensure minimum options for multi-select
-                          let newOptions = [...formData.options]
-                          if (newType === QuestionType.MULTI_SELECT && newOptions.length < 3) {
-                            while (newOptions.length < 3) {
-                              newOptions.push("")
-                            }
-                          } else if (newType === QuestionType.TRUE_FALSE) {
-                            // For true/false, set exactly 2 options
-                            newOptions = ["True", "False"]
-                          } else if (newType === QuestionType.MULTIPLE_CHOICE && newOptions.length < 2) {
-                            // For multiple choice, ensure at least 2 options
-                            while (newOptions.length < 2) {
-                              newOptions.push("")
-                            }
-                          }
-
-                          setFormData({
-                            ...formData,
-                            type: newType,
-                            options: newOptions,
-                            correctAnswer: "",
-                            correctAnswers: []
-                          })
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select question type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={QuestionType.MULTIPLE_CHOICE}>Multiple Choice</SelectItem>
-                          <SelectItem value={QuestionType.MULTI_SELECT}>Multi-Select</SelectItem>
-                          <SelectItem value={QuestionType.TRUE_FALSE}>True/False</SelectItem>
-                          <SelectItem value={QuestionType.FILL_IN_BLANK}>Fill in the Blank</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {formData.type !== QuestionType.FILL_IN_BLANK && (
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <Label className="text-sm font-medium">Options</Label>
-                          <Button type="button" variant="outline" size="sm" onClick={addOption}>
-                            <Plus className="h-4 w-4 mr-1" />
-                            Add Option
-                          </Button>
-                        </div>
-                        {formData.type === QuestionType.MULTI_SELECT && (
-                          <p className="text-sm text-muted-foreground">
-                            Multi-select questions require at least 3 options.
-                          </p>
-                        )}
-                        <div className="space-y-2">
-                          {formData.options.map((option, index) => (
-                            <div key={index} className="flex items-center space-x-2">
-                              <Input
-                                value={option}
-                                onChange={(e) => updateOption(index, e.target.value)}
-                                placeholder={`Option ${index + 1}`}
-                                required
-                              />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => removeOption(index)}
-                                disabled={formData.options.length <= (formData.type === QuestionType.MULTI_SELECT ? 3 :
-                                  formData.type === QuestionType.TRUE_FALSE ? 2 : 1)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {formData.type !== QuestionType.FILL_IN_BLANK && (
-                      <div className="space-y-4">
-                        <Label className="text-sm font-medium">
-                          {formData.type === QuestionType.MULTI_SELECT ? "Correct Answers" : "Correct Answer"}
-                        </Label>
-                        <div className="space-y-2">
-                          {formData.options.map((option, index) => (
-                            <div key={index} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`correct-${index}`}
-                                checked={formData.correctAnswers.includes(option)}
-                                onCheckedChange={(checked) => handleCorrectAnswerChange(option, checked as boolean)}
-                              />
-                              <label htmlFor={`correct-${index}`} className="text-sm">
-                                {option || `Option ${index + 1}`}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {formData.type === QuestionType.FILL_IN_BLANK && (
+        <div className="w-1/2 flex flex-row justify-end items-center g-2">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm} className="mr-1">
+                <Plus className="mr-2 h-4 w-4" />
+                New Question
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="min-w-[90vw] w-full p-0 m-0 rounded-none">
+              <form onSubmit={handleSubmit} className="flex flex-col h-full w-full">
+                <div className="flex flex-col h-full w-full">
+                  <DialogHeader className="px-6 pt-6 pb-4 border-b">
+                    <DialogTitle>
+                      {editingQuestion ? "Edit Question" : "Create Question"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="flex flex-row flex-1 overflow-y-auto px-6 py-4 space-y-6 gap-4">
+                    <div className="flex flex-col flex-1 w-1/2 h-full p-4 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="correctAnswer" className="text-sm font-medium">
-                          Correct Answer
+                        <Label htmlFor="title" className="text-sm font-medium">
+                          Title
                         </Label>
                         <Input
-                          id="correctAnswer"
-                          value={formData.correctAnswer}
-                          onChange={(e) => setFormData({ ...formData, correctAnswer: e.target.value })}
-                          placeholder="Enter correct answer"
+                          id="title"
+                          value={formData.title}
+                          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                          placeholder="Enter question title"
                           required
                         />
                       </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col flex-1 w-1/2 h-full p-4 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="content" className="text-sm font-medium">
-                        Content
-                      </Label>
-                      <RichTextEditor
-                        value={formData.content}
-                        onChange={(value) => setFormData({ ...formData, content: value })}
-                        placeholder="Enter question content..."
-                        className="min-h-[200px]"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="explanation" className="text-sm font-medium">
-                        Explanation
-                      </Label>
-                      <RichTextEditor
-                        value={formData.explanation}
-                        onChange={(value) => setFormData({ ...formData, explanation: value })}
-                        placeholder="Enter explanation (optional)..."
-                        className="min-h-[150px]"
-                      />
-                    </div>
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="type" className="text-sm font-medium">
+                          Type
+                        </Label>
+                        <Select
+                          value={formData.type}
+                          onValueChange={(value) => {
+                            const newType = value as QuestionType
+                            // Ensure minimum options for multi-select
+                            let newOptions = [...formData.options]
+                            if (newType === QuestionType.MULTI_SELECT && newOptions.length < 3) {
+                              while (newOptions.length < 3) {
+                                newOptions.push("")
+                              }
+                            } else if (newType === QuestionType.TRUE_FALSE) {
+                              // For true/false, set exactly 2 options
+                              newOptions = ["True", "False"]
+                            } else if (newType === QuestionType.MULTIPLE_CHOICE && newOptions.length < 2) {
+                              // For multiple choice, ensure at least 2 options
+                              while (newOptions.length < 2) {
+                                newOptions.push("")
+                              }
+                            }
 
-                </div>
-                <div className="px-6 py-4 border-t flex flex-row">
-                  <div className="w-1/2 flex justify-start items-center">
-                    <div className="flex items-center justify-center pt-4">
-                      <Label htmlFor="isActive" className="text-sm font-medium mr-2">
-                        Active
-                      </Label>
-                      <Switch
-                        id="isActive"
-                        checked={formData.isActive}
-                        onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-                      />
+                            setFormData({
+                              ...formData,
+                              type: newType,
+                              options: newOptions,
+                              correctAnswer: "",
+                              correctAnswers: []
+                            })
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select question type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={QuestionType.MULTIPLE_CHOICE}>Multiple Choice</SelectItem>
+                            <SelectItem value={QuestionType.MULTI_SELECT}>Multi-Select</SelectItem>
+                            <SelectItem value={QuestionType.TRUE_FALSE}>True/False</SelectItem>
+                            <SelectItem value={QuestionType.FILL_IN_BLANK}>Fill in the Blank</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {formData.type !== QuestionType.FILL_IN_BLANK && (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <Label className="text-sm font-medium">Options</Label>
+                            <Button type="button" variant="outline" size="sm" onClick={addOption}>
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add Option
+                            </Button>
+                          </div>
+                          {formData.type === QuestionType.MULTI_SELECT && (
+                            <p className="text-sm text-muted-foreground">
+                              Multi-select questions require at least 3 options.
+                            </p>
+                          )}
+                          <div className="space-y-2">
+                            {formData.options.map((option, index) => (
+                              <div key={index} className="flex items-center space-x-2">
+                                <Input
+                                  value={option}
+                                  onChange={(e) => updateOption(index, e.target.value)}
+                                  placeholder={`Option ${index + 1}`}
+                                  required
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removeOption(index)}
+                                  disabled={formData.options.length <= (formData.type === QuestionType.MULTI_SELECT ? 3 :
+                                    formData.type === QuestionType.TRUE_FALSE ? 2 : 1)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {formData.type !== QuestionType.FILL_IN_BLANK && (
+                        <div className="space-y-4">
+                          <Label className="text-sm font-medium">
+                            {formData.type === QuestionType.MULTI_SELECT ? "Correct Answers" : "Correct Answer"}
+                          </Label>
+                          <div className="space-y-2">
+                            {formData.options.map((option, index) => (
+                              <div key={index} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`correct-${index}`}
+                                  checked={formData.correctAnswers.includes(option)}
+                                  onCheckedChange={(checked) => handleCorrectAnswerChange(option, checked as boolean)}
+                                />
+                                <label htmlFor={`correct-${index}`} className="text-sm">
+                                  {option || `Option ${index + 1}`}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {formData.type === QuestionType.FILL_IN_BLANK && (
+                        <div className="space-y-2">
+                          <Label htmlFor="correctAnswer" className="text-sm font-medium">
+                            Correct Answer
+                          </Label>
+                          <Input
+                            id="correctAnswer"
+                            value={formData.correctAnswer}
+                            onChange={(e) => setFormData({ ...formData, correctAnswer: e.target.value })}
+                            placeholder="Enter correct answer"
+                            required
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col flex-1 w-1/2 h-full p-4 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="content" className="text-sm font-medium">
+                          Content
+                        </Label>
+                        <RichTextEditor
+                          value={formData.content}
+                          onChange={(value) => setFormData({ ...formData, content: value })}
+                          placeholder="Enter question content..."
+                          className="min-h-[200px]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="explanation" className="text-sm font-medium">
+                          Explanation
+                        </Label>
+                        <RichTextEditor
+                          value={formData.explanation}
+                          onChange={(value) => setFormData({ ...formData, explanation: value })}
+                          placeholder="Enter explanation (optional)..."
+                          className="min-h-[150px]"
+                        />
+                      </div>
+                    </div>
+
+                  </div>
+                  <div className="px-6 py-4 border-t flex flex-row">
+                    <div className="w-1/2 flex justify-start items-center">
+                      <div className="flex items-center justify-center pt-4">
+                        <Label htmlFor="isActive" className="text-sm font-medium mr-2">
+                          Active
+                        </Label>
+                        <Switch
+                          id="isActive"
+                          checked={formData.isActive}
+                          onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                        />
+                      </div>
+                    </div>
+                    <div className="w-1/2 flex justify-end items-center">
+                      <Button type="submit" disabled={submitLoading}>
+                        {submitLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {editingQuestion ? "Updating..." : "Creating..."}
+                          </>
+                        ) : (
+                          editingQuestion ? "Update" : "Create"
+                        )}
+                      </Button>
                     </div>
                   </div>
-                  <div className="w-1/2 flex justify-end items-center">
-                    <Button type="submit" disabled={submitLoading}>
-                      {submitLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          {editingQuestion ? "Updating..." : "Creating..."}
-                        </>
-                      ) : (
-                        editingQuestion ? "Update" : "Create"
-                      )}
-                    </Button>
-                  </div>
                 </div>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </form>
+            </DialogContent>
+          </Dialog>
+          <Button variant="outline" onClick={() => router.back()}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <Card>
