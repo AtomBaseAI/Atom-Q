@@ -89,13 +89,7 @@ export default function QuizUsersPage() {
   
   // Filter states for enrollment popup
   const [enrollSearchTerm, setEnrollSearchTerm] = useState("")
-  const [enrollCampusFilter, setEnrollCampusFilter] = useState("")
-  const [enrollTagsFilter, setEnrollTagsFilter] = useState("")
-  const [showEnrollFilters, setShowEnrollFilters] = useState(false)
 
-  // Get unique campuses and tags from available users
-  const uniqueCampuses = Array.from(new Set(availableUsers.map(user => user.campus).filter(Boolean)))
-  const uniqueTags = Array.from(new Set(availableUsers.flatMap(user => user.tags || [])))
 
   useEffect(() => {
     fetchQuizData()
@@ -106,7 +100,7 @@ export default function QuizUsersPage() {
     if (isEnrollDialogOpen) {
       fetchAvailableUsers()
     }
-  }, [isEnrollDialogOpen, enrollSearchTerm, enrollCampusFilter, enrollTagsFilter])
+  }, [isEnrollDialogOpen, enrollSearchTerm])
 
   const fetchQuizData = async () => {
     try {
@@ -140,8 +134,6 @@ export default function QuizUsersPage() {
       const params = new URLSearchParams({
         quizId,
         ...(enrollSearchTerm && { search: enrollSearchTerm }),
-        ...(enrollCampusFilter && { campus: enrollCampusFilter }),
-        ...(enrollTagsFilter && { tags: enrollTagsFilter })
       })
       
       const response = await fetch(`/api/admin/students/available?${params}`)
@@ -174,9 +166,6 @@ export default function QuizUsersPage() {
         setSelectedUsers([])
         // Reset filters
         setEnrollSearchTerm("")
-        setEnrollCampusFilter("")
-        setEnrollTagsFilter("")
-        setShowEnrollFilters(false)
         fetchEnrolledUsers()
       } else {
         const error = await response.json()
@@ -286,9 +275,6 @@ export default function QuizUsersPage() {
             onClick={() => {
               // Reset filters when opening dialog
               setEnrollSearchTerm("")
-              setEnrollCampusFilter("")
-              setEnrollTagsFilter("")
-              setShowEnrollFilters(false)
               setIsEnrollDialogOpen(true)
             }}
           >
@@ -332,77 +318,6 @@ export default function QuizUsersPage() {
                   />
                 </div>
 
-                {/* Filters */}
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowEnrollFilters(!showEnrollFilters)}
-                    className="flex items-center gap-2"
-                  >
-                    <Filter className="h-4 w-4" />
-                    Filters
-                    {(enrollCampusFilter || enrollTagsFilter) && (
-                      <Badge variant="secondary" className="ml-1">
-                        {(enrollCampusFilter ? 1 : 0) + (enrollTagsFilter ? 1 : 0)}
-                      </Badge>
-                    )}
-                  </Button>
-                  
-                  {(enrollCampusFilter || enrollTagsFilter) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEnrollCampusFilter("")
-                        setEnrollTagsFilter("")
-                      }}
-                      className="flex items-center gap-2 text-muted-foreground"
-                    >
-                      <X className="h-4 w-4" />
-                      Clear Filters
-                    </Button>
-                  )}
-                </div>
-
-                {/* Filter Options */}
-                {showEnrollFilters && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Campus</Label>
-                      <Select value={enrollCampusFilter} onValueChange={setEnrollCampusFilter}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Campuses" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">All Campuses</SelectItem>
-                          {uniqueCampuses.map((campus) => (
-                            <SelectItem key={campus} value={campus}>
-                              {campus}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Tags</Label>
-                      <Select value={enrollTagsFilter} onValueChange={setEnrollTagsFilter}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Tags" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">All Tags</SelectItem>
-                          {uniqueTags.map((tag) => (
-                            <SelectItem key={tag} value={tag}>
-                              {tag}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Users List */}
@@ -445,7 +360,7 @@ export default function QuizUsersPage() {
                   ))
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    {enrollSearchTerm || enrollCampusFilter || enrollTagsFilter
+                    {enrollSearchTerm 
                       ? "No users match your search criteria"
                       : "No available users found"
                     }

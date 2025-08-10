@@ -47,7 +47,6 @@ import {
   Trash2,
   ArrowUpDown,
   Loader2,
-  Filter,
   X
 } from "lucide-react"
 import { toasts } from "@/lib/toasts"
@@ -102,22 +101,8 @@ export default function UsersPage() {
     isActive: true,
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
-  // Filter states
-  const [campusFilter, setCampusFilter] = useState("")
-  const [tagsFilter, setTagsFilter] = useState("")
-  const [showFilters, setShowFilters] = useState(false)
 
-  // Get unique campuses and tags for filter options
-  const uniqueCampuses = Array.from(new Set(users.map(user => user.campus).filter(Boolean)))
-  const uniqueTags = Array.from(new Set(users.flatMap(user => user.tags || [])))
 
-  // Filter users based on filter criteria
-  const filteredUsers = users.filter(user => {
-    const matchesCampus = !campusFilter || user.campus === campusFilter
-    const matchesTags = !tagsFilter || (user.tags && user.tags.includes(tagsFilter))
-    return matchesCampus && matchesTags
-  })
 
   const columns: ColumnDef<User>[] = [
     {
@@ -467,82 +452,10 @@ export default function UsersPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Filters Section */}
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2"
-              >
-                <Filter className="h-4 w-4" />
-                Filters
-                {(campusFilter || tagsFilter) && (
-                  <Badge variant="secondary" className="ml-1">
-                    {(campusFilter ? 1 : 0) + (tagsFilter ? 1 : 0)}
-                  </Badge>
-                )}
-              </Button>
-              
-              {(campusFilter || tagsFilter) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setCampusFilter("")
-                    setTagsFilter("")
-                  }}
-                  className="flex items-center gap-2 text-muted-foreground"
-                >
-                  <X className="h-4 w-4" />
-                  Clear Filters
-                </Button>
-              )}
-            </div>
-
-            {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Campus</Label>
-                  <Select value={campusFilter} onValueChange={setCampusFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Campuses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All Campuses</SelectItem>
-                      {uniqueCampuses.map((campus) => (
-                        <SelectItem key={campus} value={campus}>
-                          {campus}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Tags</Label>
-                  <Select value={tagsFilter} onValueChange={setTagsFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Tags" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All Tags</SelectItem>
-                      {uniqueTags.map((tag) => (
-                        <SelectItem key={tag} value={tag}>
-                          {tag}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
-          </div>
-
+        
           <DataTable
             columns={columns}
-            data={filteredUsers}
+            data={users}
             searchKey="name"
             searchPlaceholder="Search users..."
           />
@@ -624,8 +537,8 @@ export default function UsersPage() {
               <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                 Cancel
               </Button>
-              <LoadingButton 
-                type="submit" 
+              <LoadingButton
+                type="submit"
                 isLoading={submitLoading}
                 loadingText="Creating..."
               >
@@ -710,8 +623,8 @@ export default function UsersPage() {
               <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancel
               </Button>
-              <LoadingButton 
-                type="submit" 
+              <LoadingButton
+                type="submit"
                 isLoading={submitLoading}
                 loadingText="Updating..."
               >
