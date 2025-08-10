@@ -17,18 +17,31 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const quizId = searchParams.get("quizId")
+    const search = searchParams.get("search") || ""
+    const campus = searchParams.get("campus") || ""
+    const tags = searchParams.get("tags") || ""
 
     if (!quizId) {
       // Return all students if no specific quiz is specified
       const students = await db.user.findMany({
         where: {
           role: UserRole.USER,
-          isActive: true
+          isActive: true,
+          ...(search && {
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { email: { contains: search, mode: "insensitive" } }
+            ]
+          }),
+          ...(campus && { campus: { contains: campus, mode: "insensitive" } }),
+          ...(tags && { tags: { has: tags } })
         },
         select: {
           id: true,
           name: true,
-          email: true
+          email: true,
+          campus: true,
+          tags: true
         }
       })
 
@@ -46,7 +59,15 @@ export async function GET(request: NextRequest) {
     // Build the where clause dynamically
     const whereClause: any = {
       role: UserRole.USER,
-      isActive: true
+      isActive: true,
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } }
+        ]
+      }),
+      ...(campus && { campus: { contains: campus, mode: "insensitive" } }),
+      ...(tags && { tags: { has: tags } })
     }
 
     // Only add notIn filter if there are enrolled students
@@ -61,7 +82,9 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         name: true,
-        email: true
+        email: true,
+        campus: true,
+        tags: true
       },
       orderBy: { name: "asc" }
     })
@@ -70,6 +93,8 @@ export async function GET(request: NextRequest) {
       id: student.id,
       name: student.name,
       email: student.email,
+      campus: student.campus,
+      tags: student.tags,
       enrolled: false
     }))
 

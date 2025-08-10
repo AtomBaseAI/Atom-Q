@@ -12,6 +12,8 @@ export async function createUserAction(formData: FormData) {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
     phone: formData.get('phone') as string,
+    campus: formData.get('campus') as string,
+    tags: formData.get('tags') ? JSON.parse(formData.get('tags') as string) : [],
     role: formData.get('role') as string,
     isActive: formData.get('isActive') === 'true',
   }
@@ -44,6 +46,8 @@ export async function createUserAction(formData: FormData) {
         email: validatedFields.data.email,
         password: hashedPassword,
         phone: validatedFields.data.phone || null,
+        campus: validatedFields.data.campus || null,
+        tags: validatedFields.data.tags || [],
         role: validatedFields.data.role,
         isActive: validatedFields.data.isActive,
       }
@@ -67,6 +71,8 @@ export async function updateUserAction(userId: string, formData: FormData) {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
     phone: formData.get('phone') as string,
+    campus: formData.get('campus') as string,
+    tags: formData.get('tags') ? JSON.parse(formData.get('tags') as string) : [],
     role: formData.get('role') as string,
     isActive: formData.get('isActive') === 'true',
   }
@@ -85,6 +91,8 @@ export async function updateUserAction(userId: string, formData: FormData) {
       name: validatedFields.data.name,
       email: validatedFields.data.email,
       phone: validatedFields.data.phone || null,
+      campus: validatedFields.data.campus || null,
+      tags: validatedFields.data.tags || [],
       role: validatedFields.data.role,
       isActive: validatedFields.data.isActive,
     }

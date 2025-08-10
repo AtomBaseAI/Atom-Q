@@ -14,6 +14,8 @@ export const UserSchema = z.object({
   role: UserRoleSchema,
   avatar: z.string().nullable(),
   phone: z.string().nullable(),
+  campus: z.string().nullable(),
+  tags: z.array(z.string()),
   isActive: z.boolean(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -30,6 +32,8 @@ export const CreateUserSchema = z.object({
   role: UserRoleSchema.optional().default(UserRole.USER),
   avatar: z.string().optional(),
   phone: z.string().optional(),
+  campus: z.string().optional(),
+  tags: z.array(z.string()).optional().default([]),
 })
 
 // User update schema
@@ -38,6 +42,8 @@ export const UpdateUserSchema = z.object({
   email: z.string().email().optional(),
   avatar: z.string().optional(),
   phone: z.string().optional(),
+  campus: z.string().optional(),
+  tags: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
   role: UserRoleSchema.optional(),
 })

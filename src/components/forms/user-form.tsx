@@ -9,13 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { TagsInput } from "@/components/ui/tags-input"
 import { Loader2 } from "lucide-react"
 import { UserRole } from "@prisma/client"
 import { createUserSchema, updateUserSchema } from "@/schema/user"
 import { createUserAction, updateUserAction } from "@/actions/user"
+import { useSession } from "next-auth/react"
 import type { z } from "zod"
 import type { User } from "@/types/user"
-import { LoadingButton } from "@/components/ui/laodaing-button"
+import { LoadingButton } from "../ui/laodaing-button"
 
 type CreateUserFormData = z.infer<typeof createUserSchema>
 type UpdateUserFormData = z.infer<typeof updateUserSchema>
@@ -29,7 +31,9 @@ interface UserFormProps {
 export function UserForm({ user, onSuccess, onError }: UserFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const { data: session } = useSession()
   const isEdit = !!user
+  const isAdmin = session?.user?.role === "ADMIN"
 
   const form = useForm<CreateUserFormData | UpdateUserFormData>({
     resolver: zodResolver(isEdit ? updateUserSchema : createUserSchema),
@@ -38,6 +42,8 @@ export function UserForm({ user, onSuccess, onError }: UserFormProps) {
       email: user?.email || "",
       password: "",
       phone: user?.phone || "",
+      campus: user?.campus || "",
+      tags: user?.tags || [],
       role: user?.role || UserRole.USER,
       isActive: user?.isActive ?? true,
     }
@@ -51,7 +57,11 @@ export function UserForm({ user, onSuccess, onError }: UserFormProps) {
       const formData = new FormData()
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          formData.append(key, value.toString())
+          if (key === "tags" && Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value))
+          } else {
+            formData.append(key, value.toString())
+          }
         }
       })
 
@@ -147,6 +157,42 @@ export function UserForm({ user, onSuccess, onError }: UserFormProps) {
             </FormItem>
           )}
         />
+
+        {isAdmin && (
+          <>
+            <FormField
+              control={form.control}
+              name="campus"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Campus</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter campus name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags</FormLabel>
+                  <FormControl>
+                    <TagsInput
+                      value={field.value || []}
+                      onChange={field.onChange}
+                      placeholder="Add tags..."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
 
         <FormField
           control={form.control}

@@ -8,6 +8,8 @@ export const createUserSchema = z.object({
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   phone: z.string().optional(),
+  campus: z.string().optional(),
+  tags: z.array(z.string()).optional().default([]),
   role: z.nativeEnum(UserRole).default(UserRole.USER),
   isActive: z.boolean().default(true),
 })
@@ -18,6 +20,8 @@ export const updateUserSchema = z.object({
   email: z.string().email("Please enter a valid email").optional(),
   password: z.string().min(6, "Password must be at least 6 characters").optional(),
   phone: z.string().optional(),
+  campus: z.string().optional(),
+  tags: z.array(z.string()).optional(),
   role: z.nativeEnum(UserRole).optional(),
   isActive: z.boolean().optional(),
 })

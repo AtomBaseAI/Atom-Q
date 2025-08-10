@@ -24,6 +24,8 @@ export async function GET(request: NextRequest) {
         role: true,
         isActive: true,
         phone: true,
+        campus: true,
+        tags: true,
         createdAt: true,
       },
       orderBy: {
@@ -52,7 +54,105 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { name, email, password, phone, role } = await request.json()
+    const body = await request.json()
+    const { importData, ...userData } = body
+
+    // Handle bulk import
+    if (importData && Array.isArray(importData)) {
+      const results = []
+      const defaultPassword = "user@atomq"
+      const hashedPassword = await bcrypt.hash(defaultPassword, 12)
+
+      for (const item of importData) {
+        try {
+          // Skip if required fields are missing
+          if (!item.name || !item.email) {
+            results.push({ 
+              email: item.email || 'unknown', 
+              status: 'failed', 
+              message: 'Missing required fields (name, email)' 
+            })
+            continue
+          }
+
+          // Check if user already exists
+          const existingUser = await db.user.findUnique({
+            where: { email: item.email }
+          })
+
+          if (existingUser) {
+            results.push({ 
+              email: item.email, 
+              status: 'failed', 
+              message: 'User already exists' 
+            })
+            continue
+          }
+
+          // Parse tags if it's a string
+          let tags = []
+          if (item.tags) {
+            if (typeof item.tags === 'string') {
+              tags = item.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+            } else if (Array.isArray(item.tags)) {
+              tags = item.tags
+            }
+          }
+
+          // Create user with default password
+          const user = await db.user.create({
+            data: {
+              name: item.name,
+              email: item.email,
+              password: hashedPassword,
+              phone: item.phone || null,
+              campus: item.campus || null,
+              tags: tags,
+              role: item.role || UserRole.USER,
+              isActive: item.isActive !== false, // Default to true if not specified
+            },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              isActive: true,
+              phone: true,
+              campus: true,
+              tags: true,
+              createdAt: true,
+            }
+          })
+
+          results.push({ 
+            email: item.email, 
+            status: 'success', 
+            user,
+            message: 'User created successfully' 
+          })
+        } catch (error) {
+          console.error('Error importing user:', error)
+          results.push({ 
+            email: item.email || 'unknown', 
+            status: 'failed', 
+            message: 'Internal server error' 
+          })
+        }
+      }
+
+      const successCount = results.filter(r => r.status === 'success').length
+      const failureCount = results.filter(r => r.status === 'failed').length
+
+      return NextResponse.json({
+        message: `Import completed: ${successCount} users created, ${failureCount} failed`,
+        results,
+        successCount,
+        failureCount
+      })
+    }
+
+    // Handle single user creation
+    const { name, email, password, phone, campus, tags, role, isActive } = userData
 
     // Check if user already exists
     const existingUser = await db.user.findUnique({
@@ -76,7 +176,10 @@ export async function POST(request: NextRequest) {
         email,
         password: hashedPassword,
         phone: phone || null,
+        campus: campus || null,
+        tags: tags || [],
         role: role || UserRole.USER,
+        isActive: isActive !== false,
       },
       select: {
         id: true,
@@ -85,6 +188,8 @@ export async function POST(request: NextRequest) {
         role: true,
         isActive: true,
         phone: true,
+        campus: true,
+        tags: true,
         createdAt: true,
       }
     })

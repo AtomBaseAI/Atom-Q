@@ -27,6 +27,13 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   ArrowLeft,
   Search,
   UserPlus,
@@ -34,7 +41,9 @@ import {
   Users,
   BookOpen,
   ArrowUpDown,
-  ChevronLeft
+  ChevronLeft,
+  Filter,
+  X
 } from "lucide-react"
 import { toasts } from "@/lib/toasts"
 import { DataTable } from "@/components/ui/data-table"
@@ -48,6 +57,8 @@ interface User {
   id: string
   name: string
   email: string
+  campus?: string
+  tags?: string[]
   enrolled: boolean
 }
 
@@ -75,11 +86,27 @@ export default function QuizUsersPage() {
   const [userToUnenroll, setUserToUnenroll] = useState<User | null>(null)
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  
+  // Filter states for enrollment popup
+  const [enrollSearchTerm, setEnrollSearchTerm] = useState("")
+  const [enrollCampusFilter, setEnrollCampusFilter] = useState("")
+  const [enrollTagsFilter, setEnrollTagsFilter] = useState("")
+  const [showEnrollFilters, setShowEnrollFilters] = useState(false)
+
+  // Get unique campuses and tags from available users
+  const uniqueCampuses = Array.from(new Set(availableUsers.map(user => user.campus).filter(Boolean)))
+  const uniqueTags = Array.from(new Set(availableUsers.flatMap(user => user.tags || [])))
 
   useEffect(() => {
     fetchQuizData()
     fetchEnrolledUsers()
   }, [quizId])
+
+  useEffect(() => {
+    if (isEnrollDialogOpen) {
+      fetchAvailableUsers()
+    }
+  }, [isEnrollDialogOpen, enrollSearchTerm, enrollCampusFilter, enrollTagsFilter])
 
   const fetchQuizData = async () => {
     try {
@@ -110,7 +137,14 @@ export default function QuizUsersPage() {
 
   const fetchAvailableUsers = async () => {
     try {
-      const response = await fetch(`/api/admin/students/available?quizId=${quizId}`)
+      const params = new URLSearchParams({
+        quizId,
+        ...(enrollSearchTerm && { search: enrollSearchTerm }),
+        ...(enrollCampusFilter && { campus: enrollCampusFilter }),
+        ...(enrollTagsFilter && { tags: enrollTagsFilter })
+      })
+      
+      const response = await fetch(`/api/admin/students/available?${params}`)
       if (response.ok) {
         const data = await response.json()
         setAvailableUsers(data)
@@ -138,8 +172,12 @@ export default function QuizUsersPage() {
         toast.success(`${selectedUsers.length} user(s) enrolled successfully`)
         setIsEnrollDialogOpen(false)
         setSelectedUsers([])
+        // Reset filters
+        setEnrollSearchTerm("")
+        setEnrollCampusFilter("")
+        setEnrollTagsFilter("")
+        setShowEnrollFilters(false)
         fetchEnrolledUsers()
-        fetchAvailableUsers()
       } else {
         const error = await response.json()
         toast.error(error.message || 'Failed to enroll users')
@@ -246,7 +284,11 @@ export default function QuizUsersPage() {
         <div className="flex flex-row justify-end items-center w-1/2 gap-1">
           <Button
             onClick={() => {
-              fetchAvailableUsers()
+              // Reset filters when opening dialog
+              setEnrollSearchTerm("")
+              setEnrollCampusFilter("")
+              setEnrollTagsFilter("")
+              setShowEnrollFilters(false)
               setIsEnrollDialogOpen(true)
             }}
           >
@@ -277,10 +319,97 @@ export default function QuizUsersPage() {
           </SheetHeader>
           <div className="mt-6 px-4">
             <div className="space-y-4">
-              <div className="min-h-[60vh] overflow-y-auto space-y-2">
+              {/* Search and Filters Section */}
+              <div className="space-y-4">
+                {/* Search Input */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search users by name or email..."
+                    value={enrollSearchTerm}
+                    onChange={(e) => setEnrollSearchTerm(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+
+                {/* Filters */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowEnrollFilters(!showEnrollFilters)}
+                    className="flex items-center gap-2"
+                  >
+                    <Filter className="h-4 w-4" />
+                    Filters
+                    {(enrollCampusFilter || enrollTagsFilter) && (
+                      <Badge variant="secondary" className="ml-1">
+                        {(enrollCampusFilter ? 1 : 0) + (enrollTagsFilter ? 1 : 0)}
+                      </Badge>
+                    )}
+                  </Button>
+                  
+                  {(enrollCampusFilter || enrollTagsFilter) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEnrollCampusFilter("")
+                        setEnrollTagsFilter("")
+                      }}
+                      className="flex items-center gap-2 text-muted-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                      Clear Filters
+                    </Button>
+                  )}
+                </div>
+
+                {/* Filter Options */}
+                {showEnrollFilters && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Campus</Label>
+                      <Select value={enrollCampusFilter} onValueChange={setEnrollCampusFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All Campuses" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Campuses</SelectItem>
+                          {uniqueCampuses.map((campus) => (
+                            <SelectItem key={campus} value={campus}>
+                              {campus}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Tags</Label>
+                      <Select value={enrollTagsFilter} onValueChange={setEnrollTagsFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All Tags" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Tags</SelectItem>
+                          {uniqueTags.map((tag) => (
+                            <SelectItem key={tag} value={tag}>
+                              {tag}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Users List */}
+              <div className="min-h-[50vh] overflow-y-auto space-y-2">
                 {availableUsers.length > 0 ? (
                   availableUsers.map((user) => (
-                    <div key={user.id} className="flex items-center space-x-3 p-2 border rounded">
+                    <div key={user.id} className="flex items-start space-x-3 p-3 border rounded hover:bg-muted/50">
                       <input
                         type="checkbox"
                         id={`user-${user.id}`}
@@ -292,20 +421,38 @@ export default function QuizUsersPage() {
                             setSelectedUsers(selectedUsers.filter(id => id !== user.id))
                           }
                         }}
-                        className="h-4 w-4"
+                        className="h-4 w-4 mt-1"
                       />
                       <label htmlFor={`user-${user.id}`} className="flex-1 cursor-pointer">
                         <div className="font-medium">{user.name}</div>
                         <div className="text-sm text-muted-foreground">{user.email}</div>
+                        {user.campus && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Campus: {user.campus}
+                          </div>
+                        )}
+                        {user.tags && user.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {user.tags.map((tag, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </label>
                     </div>
                   ))
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    No available users found
+                    {enrollSearchTerm || enrollCampusFilter || enrollTagsFilter
+                      ? "No users match your search criteria"
+                      : "No available users found"
+                    }
                   </div>
                 )}
               </div>
+              
               {selectedUsers.length > 0 && (
                 <div className="text-sm text-muted-foreground">
                   {selectedUsers.length} user(s) selected

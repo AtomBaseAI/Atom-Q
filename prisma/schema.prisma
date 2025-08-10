@@ -8,34 +8,36 @@ datasource db {
 }
 
 model User {
-  id             String        @id @default(cuid())
-  email          String        @unique
+  id             String          @id @default(cuid())
+  email          String          @unique
   name           String?
   password       String
-  role           UserRole      @default(USER)
+  role           UserRole        @default(USER)
   avatar         String?
   phone          String?
-  isActive       Boolean       @default(true)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  campus         String?
+  tags           String[]
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   quizAttempts   QuizAttempt[]
   quizUsers      QuizUser[]
-  createdQuizzes Quiz[]        @relation("QuizCreator")
+  createdQuizzes Quiz[]          @relation("QuizCreator")
   questionGroups QuestionGroup[]
 
   @@map("users")
 }
 
 model QuestionGroup {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   name        String
   description String?
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   questions   Question[]
   creatorId   String
-  creator     User      @relation(fields: [creatorId], references: [id])
+  creator     User       @relation(fields: [creatorId], references: [id])
 
   @@map("question_groups")
 }

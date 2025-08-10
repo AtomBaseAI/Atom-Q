@@ -46,7 +46,9 @@ import {
   Edit,
   Trash2,
   ArrowUpDown,
-  Loader2
+  Loader2,
+  Filter,
+  X
 } from "lucide-react"
 import { toasts } from "@/lib/toasts"
 import { UserRole } from "@prisma/client"
@@ -63,6 +65,8 @@ interface User {
   role: UserRole
   isActive: boolean
   phone?: string
+  campus?: string
+  tags?: string[]
   createdAt: string
 }
 
@@ -72,6 +76,8 @@ interface FormData {
   password: string
   role: UserRole
   phone: string
+  campus: string
+  tags: string[]
   isActive: boolean
 }
 
@@ -91,9 +97,27 @@ export default function UsersPage() {
     password: "",
     role: UserRole.USER,
     phone: "",
+    campus: "",
+    tags: [],
     isActive: true,
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Filter states
+  const [campusFilter, setCampusFilter] = useState("")
+  const [tagsFilter, setTagsFilter] = useState("")
+  const [showFilters, setShowFilters] = useState(false)
+
+  // Get unique campuses and tags for filter options
+  const uniqueCampuses = Array.from(new Set(users.map(user => user.campus).filter(Boolean)))
+  const uniqueTags = Array.from(new Set(users.flatMap(user => user.tags || [])))
+
+  // Filter users based on filter criteria
+  const filteredUsers = users.filter(user => {
+    const matchesCampus = !campusFilter || user.campus === campusFilter
+    const matchesTags = !tagsFilter || (user.tags && user.tags.includes(tagsFilter))
+    return matchesCampus && matchesTags
+  })
 
   const columns: ColumnDef<User>[] = [
     {
@@ -143,6 +167,29 @@ export default function UsersPage() {
       accessorKey: "phone",
       header: "Phone",
       cell: ({ row }) => row.getValue("phone") || "-",
+    },
+    {
+      accessorKey: "campus",
+      header: "Campus",
+      cell: ({ row }) => row.getValue("campus") || "-",
+    },
+    {
+      accessorKey: "tags",
+      header: "Tags",
+      cell: ({ row }) => {
+        const tags = row.getValue("tags") as string[] || []
+        return tags.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {tags.map((tag, index) => (
+              <Badge key={index} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )
+      },
     },
     {
       accessorKey: "isActive",
@@ -290,6 +337,8 @@ export default function UsersPage() {
       password: "",
       role: user.role,
       phone: user.phone || "",
+      campus: user.campus || "",
+      tags: user.tags || [],
       isActive: user.isActive,
     })
     setIsEditDialogOpen(true)
@@ -307,6 +356,8 @@ export default function UsersPage() {
       password: "",
       role: UserRole.USER,
       phone: "",
+      campus: "",
+      tags: [],
       isActive: true,
     })
   }
@@ -317,6 +368,8 @@ export default function UsersPage() {
       email: user.email,
       role: user.role,
       phone: user.phone || "",
+      campus: user.campus || "",
+      tags: user.tags ? user.tags.join(';') : "",
       isActive: user.isActive,
       createdAt: user.createdAt,
     }))
@@ -353,10 +406,12 @@ export default function UsersPage() {
             })
 
             if (response.ok) {
-              toasts.success("Users imported successfully")
+              const result = await response.json()
+              toasts.success(result.message || "Users imported successfully")
               fetchUsers()
             } else {
-              toasts.error("Import failed")
+              const error = await response.json()
+              toasts.error(error.message || "Import failed")
             }
           } catch (error) {
             toasts.actionFailed("User import")
@@ -412,9 +467,82 @@ export default function UsersPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Filters Section */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2"
+              >
+                <Filter className="h-4 w-4" />
+                Filters
+                {(campusFilter || tagsFilter) && (
+                  <Badge variant="secondary" className="ml-1">
+                    {(campusFilter ? 1 : 0) + (tagsFilter ? 1 : 0)}
+                  </Badge>
+                )}
+              </Button>
+              
+              {(campusFilter || tagsFilter) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setCampusFilter("")
+                    setTagsFilter("")
+                  }}
+                  className="flex items-center gap-2 text-muted-foreground"
+                >
+                  <X className="h-4 w-4" />
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+
+            {showFilters && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Campus</Label>
+                  <Select value={campusFilter} onValueChange={setCampusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Campuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Campuses</SelectItem>
+                      {uniqueCampuses.map((campus) => (
+                        <SelectItem key={campus} value={campus}>
+                          {campus}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Tags</Label>
+                  <Select value={tagsFilter} onValueChange={setTagsFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Tags" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Tags</SelectItem>
+                      {uniqueTags.map((tag) => (
+                        <SelectItem key={tag} value={tag}>
+                          {tag}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+          </div>
+
           <DataTable
             columns={columns}
-            data={users}
+            data={filteredUsers}
             searchKey="name"
             searchPlaceholder="Search users..."
           />
