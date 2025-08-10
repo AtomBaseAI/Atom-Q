@@ -16,6 +16,7 @@ import { toasts } from "@/lib/toasts"
 import { registerSchema } from "@/schema/auth"
 import { registerAction } from "@/actions/auth"
 import type { z } from "zod"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 
 type RegisterFormData = z.infer<typeof registerSchema>
 
@@ -181,16 +182,14 @@ export default function RegisterPage() {
               />
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  "Create Account"
-                )}
-              </Button>
+              <LoadingButton 
+                type="submit" 
+                className="w-full" 
+                isLoading={isLoading}
+                loadingText="Creating account..."
+              >
+                Create Account
+              </LoadingButton>
               <div className="text-center text-sm">
                 Already have an account?{" "}
                 <a href="/" className="text-primary hover:underline">

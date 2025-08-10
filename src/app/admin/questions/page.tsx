@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Edit, Trash2, Eye, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import HexagonLoader from "@/components/Loader/Loading"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 
 interface QuestionGroup {
   id: string
@@ -207,16 +208,13 @@ export default function QuestionsPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={submitLoading}>
-                  {submitLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {editingGroup ? "Updating..." : "Creating..."}
-                    </>
-                  ) : (
-                    editingGroup ? "Update" : "Create"
-                  )}
-                </Button>
+                <LoadingButton 
+                  type="submit" 
+                  isLoading={submitLoading}
+                  loadingText={editingGroup ? "Updating..." : "Creating..."}
+                >
+                  {editingGroup ? "Update" : "Create"}
+                </LoadingButton>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -304,8 +302,16 @@ export default function QuestionsPage() {
                             <AlertDialogAction 
                               onClick={() => handleDelete(group.id)}
                               className="bg-destructive hover:bg-destructive/90"
+                              disabled={deleteLoading === group.id}
                             >
-                              Delete
+                              {deleteLoading === group.id ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Deleting...
+                                </>
+                              ) : (
+                                "Delete"
+                              )}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

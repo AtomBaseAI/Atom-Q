@@ -31,6 +31,7 @@ interface User {
 import { useUserStore } from "@/stores/user"
 import { useQuizCacheStore } from "@/stores/quiz-cache"
 import HexagonLoader from "@/components/Loader/Loading"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 
 
 interface UserProfile {
@@ -354,19 +355,14 @@ export default function UserSettingsPage() {
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={saving}>
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
+              <LoadingButton 
+                type="submit" 
+                isLoading={saving}
+                loadingText="Saving..."
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </LoadingButton>
             </div>
           </form>
         </CardContent>
@@ -448,19 +444,14 @@ export default function UserSettingsPage() {
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={changingPassword}>
-                {changingPassword ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Changing Password...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Change Password
-                  </>
-                )}
-              </Button>
+              <LoadingButton 
+                type="submit" 
+                isLoading={changingPassword}
+                loadingText="Changing Password..."
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Change Password
+              </LoadingButton>
             </div>
           </form>
         </CardContent>

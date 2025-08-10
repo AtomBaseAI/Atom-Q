@@ -17,6 +17,7 @@ import { createQuizSchema, updateQuizSchema } from "@/schema/quiz"
 import { createQuizAction, updateQuizAction } from "@/actions/quiz"
 import type { z } from "zod"
 import type { Quiz } from "@/types/quiz"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 
 type CreateQuizFormData = z.infer<typeof createQuizSchema>
 type UpdateQuizFormData = z.infer<typeof updateQuizSchema>
@@ -353,16 +354,14 @@ export function QuizForm({ quiz, creatorId, onSuccess, onError }: QuizFormProps)
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {isEdit ? "Updating..." : "Creating..."}
-            </>
-          ) : (
-            isEdit ? "Update Quiz" : "Create Quiz"
-          )}
-        </Button>
+          <LoadingButton 
+          type="submit" 
+          className="w-full" 
+          isLoading={isLoading}
+          loadingText={isEdit ? "Updating..." : "Creating..."}
+        >
+          {isEdit ? "Update Quiz" : "Create Quiz"}
+        </LoadingButton>
       </form>
     </Form>
   )

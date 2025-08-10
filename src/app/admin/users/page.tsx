@@ -54,6 +54,7 @@ import Papa from "papaparse"
 import { DataTable } from "@/components/ui/data-table"
 import { ColumnDef } from "@tanstack/react-table"
 import HexagonLoader from "@/components/Loader/Loading"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 
 interface User {
   id: string
@@ -495,16 +496,13 @@ export default function UsersPage() {
               <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitLoading}>
-                {submitLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  "Create User"
-                )}
-              </Button>
+              <LoadingButton 
+                type="submit" 
+                isLoading={submitLoading}
+                loadingText="Creating..."
+              >
+                Create User
+              </LoadingButton>
             </SheetFooter>
           </form>
         </SheetContent>
@@ -584,16 +582,13 @@ export default function UsersPage() {
               <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitLoading}>
-                {submitLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  "Update User"
-                )}
-              </Button>
+              <LoadingButton 
+                type="submit" 
+                isLoading={submitLoading}
+                loadingText="Updating..."
+              >
+                Update User
+              </LoadingButton>
             </SheetFooter>
           </form>
         </SheetContent>

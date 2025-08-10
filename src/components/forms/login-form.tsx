@@ -12,6 +12,7 @@ import { Loader2 } from "lucide-react"
 import { loginSchema } from "@/schema/auth"
 import { loginAction } from "@/actions/auth"
 import type { z } from "zod"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 
 type LoginFormData = z.infer<typeof loginSchema>
 
@@ -104,16 +105,14 @@ export function LoginForm({ onSuccess, onError }: LoginFormProps) {
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Signing in...
-            </>
-          ) : (
-            "Sign In"
-          )}
-        </Button>
+        <LoadingButton 
+          type="submit" 
+          className="w-full" 
+          isLoading={isLoading}
+          loadingText="Signing in..."
+        >
+          Sign In
+        </LoadingButton>
       </form>
     </Form>
   )

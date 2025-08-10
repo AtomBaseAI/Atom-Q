@@ -18,6 +18,7 @@ import { Plus, Edit, Trash2, ArrowLeft, Loader2, ChevronLeft } from "lucide-reac
 import { format } from "date-fns"
 import { QuestionType, DifficultyLevel } from "@prisma/client"
 import HexagonLoader from "@/components/Loader/Loading"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 
 interface Question {
   id: string
@@ -515,16 +516,13 @@ export default function QuestionGroupPage() {
                       </div>
                     </div>
                     <div className="w-1/2 flex justify-end items-center">
-                      <Button type="submit" disabled={submitLoading}>
-                        {submitLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            {editingQuestion ? "Updating..." : "Creating..."}
-                          </>
-                        ) : (
-                          editingQuestion ? "Update" : "Create"
-                        )}
-                      </Button>
+                      <LoadingButton 
+                        type="submit" 
+                        isLoading={submitLoading}
+                        loadingText={editingQuestion ? "Updating..." : "Creating..."}
+                      >
+                        {editingQuestion ? "Update" : "Create"}
+                      </LoadingButton>
                     </div>
                   </div>
                 </div>
@@ -617,8 +615,16 @@ export default function QuestionGroupPage() {
                             <AlertDialogAction
                               onClick={() => handleDelete(question.id)}
                               className="bg-destructive hover:bg-destructive/90"
+                              disabled={deleteLoading === question.id}
                             >
-                              Delete
+                              {deleteLoading === question.id ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Deleting...
+                                </>
+                              ) : (
+                                "Delete"
+                              )}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

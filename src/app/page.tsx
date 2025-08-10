@@ -12,6 +12,7 @@ import { Loader2, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { toasts } from "@/lib/toasts"
 import HexagonLoader from "@/components/Loader/Loading"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 
 function LoginForm() {
   const [email, setEmail] = useState("")
@@ -129,16 +130,14 @@ function LoginForm() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                "Sign in"
-              )}
-            </Button>
+            <LoadingButton 
+              type="submit" 
+              className="w-full" 
+              isLoading={isLoading}
+              loadingText="Signing in..."
+            >
+              Sign in
+            </LoadingButton>
             <div className="text-center text-sm">
               Don't have an account?{" "}
               <a href="/register" className="text-primary hover:underline">
@@ -148,7 +147,7 @@ function LoginForm() {
             <div className="text-xs text-muted-foreground text-center space-y-1">
               <p><strong>Demo Credentials:</strong></p>
               <p>Admin: admin@demo.com / admin123</p>
-              <p>User: user@example.com / user123</p>
+              <p>Users: john@demo.com, jane@demo.com, bob@demo.com / user123</p>
             </div>
           </CardFooter>
         </form>

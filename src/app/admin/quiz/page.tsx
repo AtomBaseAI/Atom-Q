@@ -59,6 +59,7 @@ import Papa from "papaparse"
 import { DataTable } from "@/components/ui/data-table"
 import { ColumnDef } from "@tanstack/react-table"
 import HexagonLoader from "@/components/Loader/Loading"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 
 interface Quiz {
   id: string
@@ -764,7 +765,13 @@ export default function QuizzesPage() {
               <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Create Quiz</Button>
+              <LoadingButton 
+                type="submit" 
+                isLoading={submitLoading}
+                loadingText="Creating..."
+              >
+                Create Quiz
+              </LoadingButton>
             </SheetFooter>
           </form>
         </SheetContent>
@@ -934,7 +941,13 @@ export default function QuizzesPage() {
               <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Update Quiz</Button>
+              <LoadingButton 
+                type="submit" 
+                isLoading={submitLoading}
+                loadingText="Updating..."
+              >
+                Update Quiz
+              </LoadingButton>
             </SheetFooter>
           </form>
         </SheetContent>
@@ -959,8 +972,16 @@ export default function QuizzesPage() {
             <AlertDialogAction
               onClick={() => quizToDelete && handleDeleteQuiz(quizToDelete.id)}
               className="bg-red-600 hover:bg-red-700"
+              disabled={deleteLoading === quizToDelete?.id}
             >
-              Delete Quiz
+              {deleteLoading === quizToDelete?.id ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Quiz"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

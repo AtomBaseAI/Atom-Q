@@ -13,6 +13,7 @@ import { toasts } from "@/lib/toasts"
 import { Loader2, Save, Settings } from "lucide-react"
 import { useAccentColor } from "@/components/providers/accent-color-provider"
 import HexagonLoader from "@/components/Loader/Loading"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 
 interface SettingsData {
   id: string
@@ -262,19 +263,14 @@ export default function SettingsPage() {
 
         {/* Save Button */}
         <div className="flex justify-end">
-          <Button type="submit" disabled={saving}>
-            {saving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Save Changes
-              </>
-            )}
-          </Button>
+          <LoadingButton 
+            type="submit" 
+            isLoading={saving}
+            loadingText="Saving..."
+          >
+            <Save className="mr-2 h-4 w-4" />
+            Save Changes
+          </LoadingButton>
         </div>
       </form>
 

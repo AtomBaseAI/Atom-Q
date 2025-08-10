@@ -15,6 +15,7 @@ import { createUserSchema, updateUserSchema } from "@/schema/user"
 import { createUserAction, updateUserAction } from "@/actions/user"
 import type { z } from "zod"
 import type { User } from "@/types/user"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 
 type CreateUserFormData = z.infer<typeof createUserSchema>
 type UpdateUserFormData = z.infer<typeof updateUserSchema>
@@ -187,16 +188,14 @@ export function UserForm({ user, onSuccess, onError }: UserFormProps) {
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {isEdit ? "Updating..." : "Creating..."}
-            </>
-          ) : (
-            isEdit ? "Update User" : "Create User"
-          )}
-        </Button>
+        <LoadingButton 
+          type="submit" 
+          className="w-full" 
+          isLoading={isLoading}
+          loadingText={isEdit ? "Updating..." : "Creating..."}
+        >
+          {isEdit ? "Update User" : "Create User"}
+        </LoadingButton>
       </form>
     </Form>
   )
