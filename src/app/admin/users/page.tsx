@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -55,6 +55,7 @@ import Papa from "papaparse"
 import { DataTable } from "@/components/ui/data-table"
 import { ColumnDef } from "@tanstack/react-table"
 import HexagonLoader from "@/components/Loader/Loading"
+import { TagsInput } from "@/components/ui/tags-input"
 import { LoadingButton } from "@/components/ui/laodaing-button"
 
 interface User {
@@ -101,6 +102,17 @@ export default function UsersPage() {
     isActive: true,
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Get unique campuses and tags for filters
+  const uniqueCampuses = useMemo(() => {
+    const campuses = users.map(user => user.campus).filter(Boolean) as string[]
+    return [...new Set(campuses)]
+  }, [users])
+
+  const uniqueTags = useMemo(() => {
+    const allTags = users.flatMap(user => user.tags || []).filter(Boolean)
+    return [...new Set(allTags)]
+  }, [users])
 
 
 
@@ -174,6 +186,11 @@ export default function UsersPage() {
         ) : (
           <span className="text-muted-foreground">-</span>
         )
+      },
+      filterFn: (row, columnId, filterValue) => {
+        if (!filterValue) return true
+        const tags = row.getValue(columnId) as string[] || []
+        return tags.includes(filterValue)
       },
     },
     {
@@ -458,6 +475,24 @@ export default function UsersPage() {
             data={users}
             searchKey="name"
             searchPlaceholder="Search users..."
+            filters={[
+              {
+                key: "campus",
+                label: "Campus",
+                options: [
+                  { value: "all", label: "All Campuses" },
+                  ...uniqueCampuses.map(campus => ({ value: campus, label: campus }))
+                ],
+              },
+              {
+                key: "tags",
+                label: "Tags",
+                options: [
+                  { value: "all", label: "All Tags" },
+                  ...uniqueTags.map(tag => ({ value: tag, label: tag }))
+                ],
+              },
+            ]}
           />
         </CardContent>
       </Card>
@@ -508,6 +543,23 @@ export default function UsersPage() {
                   id="add-phone"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="add-campus">Campus</Label>
+                <Input
+                  id="add-campus"
+                  value={formData.campus}
+                  onChange={(e) => setFormData({ ...formData, campus: e.target.value })}
+                  placeholder="Enter campus name"
+                />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="add-tags">Tags</Label>
+                <TagsInput
+                  value={formData.tags}
+                  onChange={(tags) => setFormData({ ...formData, tags })}
+                  placeholder="Add tags..."
                 />
               </div>
               <div className="grid gap-3">
@@ -594,6 +646,23 @@ export default function UsersPage() {
                   id="edit-phone"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="edit-campus">Campus</Label>
+                <Input
+                  id="edit-campus"
+                  value={formData.campus}
+                  onChange={(e) => setFormData({ ...formData, campus: e.target.value })}
+                  placeholder="Enter campus name"
+                />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="edit-tags">Tags</Label>
+                <TagsInput
+                  value={formData.tags}
+                  onChange={(tags) => setFormData({ ...formData, tags })}
+                  placeholder="Add tags..."
                 />
               </div>
               <div className="grid gap-3">

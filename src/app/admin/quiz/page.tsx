@@ -597,6 +597,25 @@ export default function QuizzesPage() {
             data={quizzes}
             searchKey="title"
             searchPlaceholder="Search quizzes..."
+            filters={[
+              {
+                key: "difficulty",
+                label: "Difficulty",
+                options: [
+                  { value: DifficultyLevel.EASY, label: "Easy" },
+                  { value: DifficultyLevel.MEDIUM, label: "Medium" },
+                  { value: DifficultyLevel.HARD, label: "Hard" },
+                ],
+              },
+              {
+                key: "status",
+                label: "Status",
+                options: [
+                  { value: QuizStatus.DRAFT, label: "Draft" },
+                  { value: QuizStatus.ACTIVE, label: "Active" },
+                ],
+              },
+            ]}
           />
         </CardContent>
       </Card>

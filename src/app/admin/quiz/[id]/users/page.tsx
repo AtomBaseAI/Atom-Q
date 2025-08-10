@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -89,6 +89,8 @@ export default function QuizUsersPage() {
 
   // Filter states for enrollment popup
   const [enrollSearchTerm, setEnrollSearchTerm] = useState("")
+  const [enrollCampusFilter, setEnrollCampusFilter] = useState<string>("all")
+  const [enrollTagFilter, setEnrollTagFilter] = useState<string>("all")
 
 
   useEffect(() => {
@@ -100,7 +102,7 @@ export default function QuizUsersPage() {
     if (isEnrollDialogOpen) {
       fetchAvailableUsers()
     }
-  }, [isEnrollDialogOpen, enrollSearchTerm])
+  }, [isEnrollDialogOpen, enrollSearchTerm, enrollCampusFilter, enrollTagFilter])
 
   const fetchQuizData = async () => {
     try {
@@ -134,6 +136,8 @@ export default function QuizUsersPage() {
       const params = new URLSearchParams({
         quizId,
         ...(enrollSearchTerm && { search: enrollSearchTerm }),
+        ...(enrollCampusFilter !== "all" && { campus: enrollCampusFilter }),
+        ...(enrollTagFilter !== "all" && { tag: enrollTagFilter }),
       })
 
       const response = await fetch(`/api/admin/students/available?${params}`)
@@ -166,6 +170,8 @@ export default function QuizUsersPage() {
         setSelectedUsers([])
         // Reset filters
         setEnrollSearchTerm("")
+        setEnrollCampusFilter("all")
+        setEnrollTagFilter("all")
         fetchEnrolledUsers()
       } else {
         const error = await response.json()
@@ -203,6 +209,28 @@ export default function QuizUsersPage() {
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  // Get unique campuses and tags for filters
+  const uniqueCampuses = useMemo(() => {
+    const campuses = users.map(user => user.campus).filter(Boolean) as string[]
+    return [...new Set(campuses)]
+  }, [users])
+
+  const uniqueTags = useMemo(() => {
+    const allTags = users.flatMap(user => user.tags || []).filter(Boolean)
+    return [...new Set(allTags)]
+  }, [users])
+
+  // Get unique campuses and tags for enrollment filters
+  const enrollUniqueCampuses = useMemo(() => {
+    const campuses = availableUsers.map(user => user.campus).filter(Boolean) as string[]
+    return [...new Set(campuses)]
+  }, [availableUsers])
+
+  const enrollUniqueTags = useMemo(() => {
+    const allTags = availableUsers.flatMap(user => user.tags || []).filter(Boolean)
+    return [...new Set(allTags)]
+  }, [availableUsers])
+
   const columns: ColumnDef<User>[] = [
     {
       accessorKey: "name",
@@ -222,6 +250,34 @@ export default function QuizUsersPage() {
     {
       accessorKey: "email",
       header: "Email",
+    },
+    {
+      accessorKey: "campus",
+      header: "Campus",
+      cell: ({ row }) => row.getValue("campus") || "-",
+    },
+    {
+      accessorKey: "tags",
+      header: "Tags",
+      cell: ({ row }) => {
+        const tags = row.getValue("tags") as string[] || []
+        return tags.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {tags.map((tag, index) => (
+              <Badge key={index} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )
+      },
+      filterFn: (row, columnId, filterValue) => {
+        if (!filterValue) return true
+        const tags = row.getValue(columnId) as string[] || []
+        return tags.includes(filterValue)
+      },
     },
     {
       id: "actions",
@@ -275,6 +331,8 @@ export default function QuizUsersPage() {
             onClick={() => {
               // Reset filters when opening dialog
               setEnrollSearchTerm("")
+              setEnrollCampusFilter("all")
+              setEnrollTagFilter("all")
               setIsEnrollDialogOpen(true)
             }}
           >
@@ -292,7 +350,30 @@ export default function QuizUsersPage() {
         </div>
       </div>
 
-      <DataTable columns={columns} data={filteredUsers} />
+      <DataTable 
+        columns={columns} 
+        data={filteredUsers}
+        searchKey="name"
+        searchPlaceholder="Search enrolled users..."
+        filters={[
+          {
+            key: "campus",
+            label: "Campus",
+            options: [
+              { value: "all", label: "All Campuses" },
+              ...uniqueCampuses.map(campus => ({ value: campus, label: campus }))
+            ],
+          },
+          {
+            key: "tags",
+            label: "Tags",
+            options: [
+              { value: "all", label: "All Tags" },
+              ...uniqueTags.map(tag => ({ value: tag, label: tag }))
+            ],
+          },
+        ]}
+      />
 
       {/* Enroll Users Dialog */}
       <Sheet open={isEnrollDialogOpen} onOpenChange={setIsEnrollDialogOpen}>
@@ -301,9 +382,9 @@ export default function QuizUsersPage() {
           <div className="mt-6 px-4">
             <div className="space-y-4">
               {/* Search and Filters Section */}
-              <div className="space-y-4 w-full flex justify-center items-center">
+              <div className="space-y-4 w-full">
                 {/* Search Input */}
-                <div className="w-1/2 relative justify-start">
+                <div className="relative">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search users by name or email..."
@@ -312,20 +393,70 @@ export default function QuizUsersPage() {
                     className="pl-9"
                   />
                 </div>
-                <div className="flex flex-row flex-1 w-1/2 justify-end items-center px-1 gap-2">
-                  <div className=" flex justify-start items-center">
+                
+                {/* Filters Row */}
+                <div className="flex gap-4 flex-wrap">
+                  {/* Campus Filter */}
+                  <Select value={enrollCampusFilter} onValueChange={setEnrollCampusFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by campus" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Campuses</SelectItem>
+                      {enrollUniqueCampuses.map(campus => (
+                        <SelectItem key={campus} value={campus}>
+                          {campus}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Tags Filter */}
+                  <Select value={enrollTagFilter} onValueChange={setEnrollTagFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by tags" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Tags</SelectItem>
+                      {enrollUniqueTags.map(tag => (
+                        <SelectItem key={tag} value={tag}>
+                          {tag}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Clear Filters Button */}
+                  {(enrollSearchTerm || enrollCampusFilter !== "all" || enrollTagFilter !== "all") && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEnrollSearchTerm("")
+                        setEnrollCampusFilter("all")
+                        setEnrollTagFilter("all")
+                      }}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Clear Filters
+                    </Button>
+                  )}
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <div className="flex gap-2">
                     <Button variant="outline" onClick={() => setIsEnrollDialogOpen(false)}>
                       Cancel
                     </Button>
                   </div>
-                  <div className=" flex justify-end items-center">
+                  <div className="flex gap-2">
                     <Button
                       onClick={handleEnrollUsers}
                       disabled={selectedUsers.length === 0}
                     >
                       Enroll Selected Users ({selectedUsers.length})
                     </Button>
-
                   </div>
                 </div>
               </div>
