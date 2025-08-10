@@ -137,7 +137,7 @@ export default function QuizUsersPage() {
         quizId,
         ...(enrollSearchTerm && { search: enrollSearchTerm }),
         ...(enrollCampusFilter !== "all" && { campus: enrollCampusFilter }),
-        ...(enrollTagFilter !== "all" && { tag: enrollTagFilter }),
+        ...(enrollTagFilter !== "all" && { tags: enrollTagFilter }),
       })
 
       const response = await fetch(`/api/admin/students/available?${params}`)
