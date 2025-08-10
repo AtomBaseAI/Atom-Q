@@ -86,7 +86,7 @@ export default function QuizUsersPage() {
   const [userToUnenroll, setUserToUnenroll] = useState<User | null>(null)
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
-  
+
   // Filter states for enrollment popup
   const [enrollSearchTerm, setEnrollSearchTerm] = useState("")
 
@@ -135,7 +135,7 @@ export default function QuizUsersPage() {
         quizId,
         ...(enrollSearchTerm && { search: enrollSearchTerm }),
       })
-      
+
       const response = await fetch(`/api/admin/students/available?${params}`)
       if (response.ok) {
         const data = await response.json()
@@ -256,7 +256,7 @@ export default function QuizUsersPage() {
       <div className="flex items-center justify-center">
         <div className="flex flex-row justify-start items-center w-1/2 gap-1">
           <div className="h-full flex flex-row drak:bg-slate-400 mr-2">
-            <h1 className="mr-1">{quiz?.title} </h1> (<p>{users.length}</p>) 
+            <h1 className="mr-1">{quiz?.title} </h1> (<p>{users.length}</p>)
           </div>
           <div className="flex items-center space-x-2">
             <div className="relative">
@@ -296,19 +296,14 @@ export default function QuizUsersPage() {
 
       {/* Enroll Users Dialog */}
       <Sheet open={isEnrollDialogOpen} onOpenChange={setIsEnrollDialogOpen}>
-        <SheetContent className="min-w-[100vw] sm:w-[90vw]">
-          <SheetHeader>
-            <SheetTitle>Enroll Users</SheetTitle>
-            <SheetDescription>
-              Select users to enroll in this quiz
-            </SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 px-4">
+        <SheetContent className="min-w-[100vw] sm:w-[90vw] min-h-[100vh]">
+          <SheetTitle className="hidden">Enroll Users</SheetTitle>
+          <div className="mt-6 px-4 overflow-y-auto">
             <div className="space-y-4">
               {/* Search and Filters Section */}
-              <div className="space-y-4">
+              <div className="space-y-4 w-full flex justify-center items-center">
                 {/* Search Input */}
-                <div className="relative">
+                <div className="w-1/2 relative justify-start">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search users by name or email..."
@@ -317,11 +312,26 @@ export default function QuizUsersPage() {
                     className="pl-9"
                   />
                 </div>
+                <div className="flex flex-row flex-1 w-1/2 justify-end items-center px-1 gap-2">
+                  <div className=" flex justify-start items-center">
+                    <Button variant="outline" onClick={() => setIsEnrollDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                  <div className=" flex justify-end items-center">
+                    <Button
+                      onClick={handleEnrollUsers}
+                      disabled={selectedUsers.length === 0}
+                    >
+                      Enroll Selected Users ({selectedUsers.length})
+                    </Button>
 
+                  </div>
+                </div>
               </div>
 
               {/* Users List */}
-              <div className="max-h-[600px] overflow-y-auto space-y-2 w-full">
+              <div className="max-h-[60vh] overflow-hidden space-y-2 w-full">
                 {availableUsers.length > 0 ? (
                   availableUsers.map((user) => (
                     <div key={user.id} className="flex flex-row items-start space-x-3 p-3 border rounded hover:bg-muted/50">
@@ -343,7 +353,7 @@ export default function QuizUsersPage() {
                         <div className="text-sm text-muted-foreground"><b className="text-primary">Email : </b> {user.email}</div>
                         {user.campus && (
                           <div className="text-xs text-muted-foreground mt-1">
-                           <b className="text-primary">Campus : </b> {user.campus}
+                            <b className="text-primary">Campus : </b> {user.campus}
                           </div>
                         )}
                         {user.tags && user.tags.length > 0 && (
@@ -361,14 +371,14 @@ export default function QuizUsersPage() {
                   ))
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    {enrollSearchTerm 
+                    {enrollSearchTerm
                       ? "No users match your search criteria"
                       : "No available users found"
                     }
                   </div>
                 )}
               </div>
-              
+
               {selectedUsers.length > 0 && (
                 <div className="text-sm text-muted-foreground">
                   {selectedUsers.length} user(s) selected
@@ -376,24 +386,6 @@ export default function QuizUsersPage() {
               )}
             </div>
           </div>
-          <SheetFooter className="mt-6">
-            <div className="flex flex-row flex-1 gap-3 w-full justify-center items-center px-4">
-              <div className="w-1/2 flex justify-start items-center">
-                <Button variant="outline" onClick={() => setIsEnrollDialogOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
-              <div className="w-1/2 flex justify-end items-center">
-                <Button
-                  onClick={handleEnrollUsers}
-                  disabled={selectedUsers.length === 0}
-                >
-                  Enroll Selected Users ({selectedUsers.length})
-                </Button>
-
-              </div>
-            </div>
-          </SheetFooter>
         </SheetContent>
       </Sheet>
 
