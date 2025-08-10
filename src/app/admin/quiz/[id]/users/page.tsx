@@ -321,10 +321,10 @@ export default function QuizUsersPage() {
               </div>
 
               {/* Users List */}
-              <div className="min-h-[50vh] overflow-y-auto space-y-2">
+              <div className="max-h-[600px] overflow-y-auto space-y-2 w-full">
                 {availableUsers.length > 0 ? (
                   availableUsers.map((user) => (
-                    <div key={user.id} className="flex items-start space-x-3 p-3 border rounded hover:bg-muted/50">
+                    <div key={user.id} className="flex flex-row items-start space-x-3 p-3 border rounded hover:bg-muted/50">
                       <input
                         type="checkbox"
                         id={`user-${user.id}`}
@@ -338,16 +338,17 @@ export default function QuizUsersPage() {
                         }}
                         className="h-4 w-4 mt-1"
                       />
-                      <label htmlFor={`user-${user.id}`} className="flex-1 cursor-pointer">
+                      <label htmlFor={`user-${user.id}`} className="flex-1 cursor-pointer flex flex-row gap-4 justify-start items-center">
                         <div className="font-medium">{user.name}</div>
-                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                        <div className="text-sm text-muted-foreground"><b className="text-primary">Email : </b> {user.email}</div>
                         {user.campus && (
                           <div className="text-xs text-muted-foreground mt-1">
-                            Campus: {user.campus}
+                           <b className="text-primary">Campus : </b> {user.campus}
                           </div>
                         )}
                         {user.tags && user.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1">
+                            <b className="text-primary">Tags : </b>
                             {user.tags.map((tag, index) => (
                               <Badge key={index} variant="outline" className="text-xs">
                                 {tag}
