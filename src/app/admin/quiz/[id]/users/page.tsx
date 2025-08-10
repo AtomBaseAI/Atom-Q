@@ -316,7 +316,7 @@ export default function QuizUsersPage() {
           </div>
           <div className="flex items-center space-x-2">
             <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search users..."
                 value={searchTerm}
@@ -382,9 +382,9 @@ export default function QuizUsersPage() {
           <div className="mt-6 px-4">
             <div className="space-y-4">
               {/* Search and Filters Section */}
-              <div className="space-y-4 w-full">
+              <div className="space-y-4 w-full mt-4 flex flex-row gap-4 items-center justify-center">
                 {/* Search Input */}
-                <div className="relative">
+                <div className="relative w-1/3">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search users by name or email..."
@@ -395,7 +395,7 @@ export default function QuizUsersPage() {
                 </div>
                 
                 {/* Filters Row */}
-                <div className="flex gap-4 flex-wrap">
+                <div className="flex gap-4 flex-wrap w-1/3 flex-row">
                   {/* Campus Filter */}
                   <Select value={enrollCampusFilter} onValueChange={setEnrollCampusFilter}>
                     <SelectTrigger className="w-[180px]">
@@ -444,7 +444,7 @@ export default function QuizUsersPage() {
                 </div>
                 
                 {/* Action Buttons */}
-                <div className="flex justify-between items-center pt-4 border-t">
+                <div className="flex justify-end items-center w-1/3 gap-2">
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={() => setIsEnrollDialogOpen(false)}>
                       Cancel
@@ -462,7 +462,7 @@ export default function QuizUsersPage() {
               </div>
 
               {/* Users List */}
-              <div className="max-h-[60vh] overflow-y-scroll space-y-2 w-full">
+              <div className="min-h-[100%] h-full overflow-y-scroll space-y-2 w-full">
                 {availableUsers.length > 0 ? (
                   availableUsers.map((user) => (
                     <div key={user.id} className="flex flex-row items-start space-x-3 p-3 border rounded hover:bg-muted/50">
