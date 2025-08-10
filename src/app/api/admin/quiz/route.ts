@@ -62,6 +62,55 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const body = await request.json()
+
+    // Check if this is an import request
+    if (body.importData && Array.isArray(body.importData)) {
+      const { importData } = body
+      const createdQuizzes = []
+
+      for (const quizData of importData) {
+        // Skip empty rows
+        if (!quizData.title || quizData.title.trim() === "") continue
+
+        try {
+          const quiz = await db.quiz.create({
+            data: {
+              title: quizData.title,
+              description: quizData.description || null,
+              timeLimit: quizData.timeLimit ? parseInt(quizData.timeLimit) : null,
+              difficulty: quizData.difficulty || DifficultyLevel.MEDIUM,
+              status: quizData.status || QuizStatus.ACTIVE,
+              negativeMarking: quizData.negativeMarking === true || quizData.negativeMarking === "true",
+              negativePoints: quizData.negativePoints ? parseFloat(quizData.negativePoints) : 0.5,
+              randomOrder: quizData.randomOrder === true || quizData.randomOrder === "true",
+              maxAttempts: quizData.maxAttempts && quizData.maxAttempts !== "" ? parseInt(quizData.maxAttempts) : null,
+              checkAnswerEnabled: quizData.checkAnswerEnabled === true || quizData.checkAnswerEnabled === "true",
+              creatorId: session.user.id,
+            },
+            include: {
+              _count: {
+                select: {
+                  quizQuestions: true,
+                  quizAttempts: true,
+                }
+              }
+            }
+          })
+          createdQuizzes.push(quiz)
+        } catch (error) {
+          console.error("Error creating quiz from import:", error)
+          // Continue with other quizzes even if one fails
+        }
+      }
+
+      return NextResponse.json({ 
+        message: `Successfully imported ${createdQuizzes.length} quizzes`,
+        quizzes: createdQuizzes 
+      }, { status: 201 })
+    }
+
+    // Regular quiz creation
     const { 
       title, 
       description, 
@@ -72,8 +121,9 @@ export async function POST(request: NextRequest) {
       randomOrder, 
       maxAttempts, 
       startTime, 
-      endTime 
-    } = await request.json()
+      endTime,
+      checkAnswerEnabled
+    } = body
 
     const quiz = await db.quiz.create({
       data: {
@@ -88,6 +138,7 @@ export async function POST(request: NextRequest) {
         maxAttempts: maxAttempts && maxAttempts !== "" ? parseInt(maxAttempts) : null,
         startTime: startTime ? new Date(startTime) : null,
         endTime: endTime ? new Date(endTime) : null,
+        checkAnswerEnabled: checkAnswerEnabled || false,
         creatorId: session.user.id,
       },
       include: {
