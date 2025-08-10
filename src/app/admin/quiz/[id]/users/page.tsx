@@ -298,7 +298,7 @@ export default function QuizUsersPage() {
       <Sheet open={isEnrollDialogOpen} onOpenChange={setIsEnrollDialogOpen}>
         <SheetContent className="min-w-[100vw] sm:w-[90vw] min-h-[100vh]">
           <SheetTitle className="hidden">Enroll Users</SheetTitle>
-          <div className="mt-6 px-4 overflow-y-auto">
+          <div className="mt-6 px-4">
             <div className="space-y-4">
               {/* Search and Filters Section */}
               <div className="space-y-4 w-full flex justify-center items-center">
@@ -331,7 +331,7 @@ export default function QuizUsersPage() {
               </div>
 
               {/* Users List */}
-              <div className="max-h-[60vh] overflow-hidden space-y-2 w-full">
+              <div className="max-h-[60vh] overflow-y-scroll space-y-2 w-full">
                 {availableUsers.length > 0 ? (
                   availableUsers.map((user) => (
                     <div key={user.id} className="flex flex-row items-start space-x-3 p-3 border rounded hover:bg-muted/50">

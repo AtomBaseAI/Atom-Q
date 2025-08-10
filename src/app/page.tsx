@@ -100,7 +100,7 @@ function LoginForm() {
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4 mb-2">
+          <CardContent className="space-y-4 mb-4">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -130,9 +130,9 @@ function LoginForm() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <LoadingButton 
-              type="submit" 
-              className="w-full" 
+            <LoadingButton
+              type="submit"
+              className="w-full"
               isLoading={isLoading}
               loadingText="Signing in..."
             >
@@ -143,11 +143,6 @@ function LoginForm() {
               <a href="/register" className="text-primary hover:underline">
                 Sign up
               </a>
-            </div>
-            <div className="text-xs text-muted-foreground text-center space-y-1">
-              <p><strong>Demo Credentials:</strong></p>
-              <p>Admin: admin@demo.com / admin123</p>
-              <p>Users: john@demo.com, jane@demo.com, bob@demo.com / user123</p>
             </div>
           </CardFooter>
         </form>
