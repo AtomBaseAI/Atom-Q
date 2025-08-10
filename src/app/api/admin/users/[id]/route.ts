@@ -45,7 +45,9 @@ export async function PUT(
         role: true,
         isActive: true,
         phone: true,
-        createdAt: true,
+        createdAt: true,        
+        campus: true,
+        tags: true,
       }
     })
 
