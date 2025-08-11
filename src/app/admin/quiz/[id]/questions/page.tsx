@@ -26,6 +26,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -267,6 +275,12 @@ export default function QuizQuestionsPage() {
   })
   const [deleteQuestionId, setDeleteQuestionId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Import sheet states
+  const [isImportSheetOpen, setIsImportSheetOpen] = useState(false)
+  const [selectedQuestionGroup, setSelectedQuestionGroup] = useState<string>("")
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [isDragOver, setIsDragOver] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -520,6 +534,178 @@ export default function QuizQuestionsPage() {
 
   const handleImportQuestions = () => {
     fileInputRef.current?.click()
+  }
+
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    
+    const files = e.dataTransfer.files
+    if (files.length > 0) {
+      const file = files[0]
+      if (file.type === "text/csv" || file.name.endsWith(".csv")) {
+        setImportFile(file)
+      } else {
+        toast.error("Please upload a CSV file")
+      }
+    }
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImportFile(file)
+    }
+  }
+
+  const handleRemoveFile = () => {
+    setImportFile(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const handleImportWithGroup = async () => {
+    if (!importFile) {
+      toast.error("Please select a file to import")
+      return
+    }
+    
+    if (!selectedQuestionGroup) {
+      toast.error("Please select a question group")
+      return
+    }
+
+    Papa.parse(importFile, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          console.log("CSV parsing results:", results)
+
+          // Filter out empty rows and validate required fields
+          const validQuestions = results.data.filter((row: any) => {
+            const hasTitle = row.Title && row.Title.trim() !== ""
+            const hasContent = row.Content && row.Content.trim() !== ""
+            const hasType = row.Type && row.Type.trim() !== ""
+            const hasOptions = row.Options && row.Options.trim() !== ""
+            const hasCorrectAnswer = row["Correct Answer"] && row["Correct Answer"].trim() !== ""
+
+            return hasTitle && hasContent && hasType && hasOptions && hasCorrectAnswer
+          })
+
+          console.log("Valid questions found:", validQuestions.length)
+
+          if (validQuestions.length === 0) {
+            toast.error("No valid questions found in CSV file. Please ensure all required fields are filled.")
+            return
+          }
+
+          // Create questions in the selected group
+          const importPromises = validQuestions.map(async (question: any, index: number) => {
+            try {
+              console.log(`Processing question ${index + 1}:`, question)
+
+              // Normalize question type
+              let questionType = question.Type?.toString().toUpperCase().trim()
+              if (!Object.values(QuestionType).includes(questionType as QuestionType)) {
+                questionType = QuestionType.MULTIPLE_CHOICE
+                console.warn(`Invalid question type "${question.Type}", defaulting to MULTIPLE_CHOICE`)
+              }
+
+              // Parse options
+              let options = []
+              if (question.Options) {
+                const optionsStr = question.Options.toString().trim()
+                if (optionsStr.startsWith('[') && optionsStr.endsWith(']')) {
+                  try {
+                    const parsed = JSON.parse(optionsStr)
+                    if (Array.isArray(parsed)) {
+                      options = parsed
+                    }
+                  } catch {
+                    options = optionsStr.split('|').map(opt => opt.trim())
+                  }
+                } else {
+                  options = optionsStr.split('|').map(opt => opt.trim())
+                }
+              }
+
+              // Create the question
+              const response = await fetch("/api/admin/questions", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  title: question.Title?.trim(),
+                  content: question.Content?.trim(),
+                  type: questionType,
+                  options: options,
+                  correctAnswer: question["Correct Answer"]?.toString(),
+                  explanation: question.Explanation?.trim() || "",
+                  difficulty: question.Difficulty?.toUpperCase() || "MEDIUM",
+                  points: parseFloat(question.Points) || 1.0,
+                  groupId: selectedQuestionGroup
+                }),
+              })
+
+              if (!response.ok) {
+                const error = await response.json()
+                throw new Error(error.message || "Failed to create question")
+              }
+
+              return await response.json()
+            } catch (error) {
+              console.error(`Failed to import question ${index + 1}:`, error)
+              throw error
+            }
+          })
+
+          const importedQuestions = await Promise.all(importPromises)
+          
+          // Add imported questions to the quiz
+          const questionIds = importedQuestions.map(q => q.id)
+          const addResponse = await fetch(`/api/admin/quiz/${quizId}/questions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ questionIds }),
+          })
+
+          if (addResponse.ok) {
+            toast.success(`Successfully imported ${importedQuestions.length} questions and added to quiz`)
+            setIsImportSheetOpen(false)
+            setImportFile(null)
+            setSelectedQuestionGroup("")
+            fetchQuestions()
+            fetchAvailableQuestions()
+          } else {
+            toast.error("Questions were imported but failed to add to quiz")
+          }
+
+        } catch (error) {
+          console.error("Import error:", error)
+          toast.error(`Failed to import questions: ${error instanceof Error ? error.message : "Unknown error"}`)
+        }
+      },
+      error: (error) => {
+        console.error("CSV parsing error:", error)
+        toast.error("Failed to parse CSV file")
+      }
+    })
   }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -813,7 +999,7 @@ export default function QuizQuestionsPage() {
                 <FileDown className="h-4 w-4 mr-2" />
                 Export
               </Button>
-              <Button variant="outline" size="sm" onClick={handleImportQuestions}>
+              <Button variant="outline" size="sm" onClick={() => setIsImportSheetOpen(true)}>
                 <FileUp className="h-4 w-4 mr-2" />
                 Import
               </Button>
@@ -1371,6 +1557,128 @@ export default function QuizQuestionsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Import Questions Sheet */}
+      <Sheet open={isImportSheetOpen} onOpenChange={setIsImportSheetOpen}>
+        <SheetContent className=" sm:w-[90vw] min-h-[100vh]">
+          <SheetHeader>
+            <SheetTitle>Import Questions</SheetTitle>
+            <SheetDescription>
+              Import questions from a CSV file and add them to a question group
+            </SheetDescription>
+          </SheetHeader>
+          
+          <div className="mt-6 space-y-6">
+            {/* Question Group Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="questionGroup">Question Group *</Label>
+              <Select value={selectedQuestionGroup} onValueChange={setSelectedQuestionGroup}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a question group" />
+                </SelectTrigger>
+                <SelectContent>
+                  {questionGroups.filter(group => group.isActive).map(group => (
+                    <SelectItem key={group.id} value={group.id}>
+                      {group.name} ({group._count.questions} questions)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* File Upload Area */}
+            <div className="space-y-2">
+              <Label>CSV File *</Label>
+              <div
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                  isDragOver
+                    ? "border-primary bg-primary/5"
+                    : "border-muted-foreground/25 hover:border-muted-foreground/50"
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                {importFile ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-center space-x-2">
+                      <FileUp className="h-8 w-8 text-primary" />
+                      <div className="text-left">
+                        <p className="font-medium">{importFile.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {(importFile.size / 1024).toFixed(1)} KB
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveFile}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Drag and drop another file or click to select
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex justify-center">
+                      <FileUp className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-lg font-medium">Drop your CSV file here</p>
+                      <p className="text-sm text-muted-foreground">
+                        or click to browse files
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="mx-auto"
+                    >
+                      Select File
+                    </Button>
+                  </div>
+                )}
+              </div>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            </div>
+
+            {/* CSV Format Instructions */}
+            <div className="space-y-2">
+              <Label>CSV Format Requirements</Label>
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2 text-sm">
+                <p><strong>Required columns:</strong> Title, Content, Type, Options, Correct Answer</p>
+                <p><strong>Optional columns:</strong> Explanation, Difficulty, Points</p>
+                <p><strong>Options format:</strong> Use pipe (|) separated values or JSON array format</p>
+                <p><strong>Supported types:</strong> MULTIPLE_CHOICE, MULTI_SELECT, TRUE_FALSE, FILL_IN_BLANK</p>
+                <p><strong>Difficulties:</strong> EASY, MEDIUM, HARD</p>
+              </div>
+            </div>
+          </div>
+
+          <SheetFooter className="mt-8">
+            <Button variant="outline" onClick={() => setIsImportSheetOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleImportWithGroup}
+              disabled={!selectedQuestionGroup || !importFile}
+            >
+              Import Questions
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
