@@ -1,7 +1,5 @@
 "use client"
 
-// Updated: Added search and group filter to Add Questions popup
-
 import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -427,10 +425,10 @@ export default function QuizQuestionsPage() {
         fetchQuestions()
         fetchAvailableQuestions()
       } else {
-        toast.error("Failed to add questions")
+        toast.error("Failed to enroll questions")
       }
     } catch (error) {
-      toast.error("Failed to add questions")
+      toast.error("Failed to enroll questions")
     }
   }
 
@@ -693,7 +691,7 @@ export default function QuizQuestionsPage() {
             fetchQuestions()
             fetchAvailableQuestions()
           } else {
-            toast.error("Questions were imported but failed to add to quiz")
+            toast.error("Questions were imported but failed to enroll to quiz")
           }
 
         } catch (error) {
@@ -972,7 +970,7 @@ export default function QuizQuestionsPage() {
         <div className="flex items-center space-x-2">
           <Button onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Questions
+            Enroll Questions
           </Button>
           <Button
             variant="outline"
@@ -1058,15 +1056,15 @@ export default function QuizQuestionsPage() {
         </CardContent>
       </Card>
 
-      {/* Add Questions Dialog */}
+      {/* Enroll Questions Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[600px] min-w-[70vw] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div>
-                <DialogTitle>Add Questions</DialogTitle>
+                <DialogTitle>Enroll Questions</DialogTitle>
                 <DialogDescription>
-                  Select questions from the available pool to add to this quiz
+                  Select questions from the available pool to enroll to this quiz
                 </DialogDescription>
               </div>
         </div>
@@ -1216,7 +1214,7 @@ export default function QuizQuestionsPage() {
               }}
               disabled={selectedQuestionsToAdd.length === 0}
             >
-              Add Selected ({selectedQuestionsToAdd.length})
+              Enroll Selected ({selectedQuestionsToAdd.length})
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1319,252 +1317,13 @@ export default function QuizQuestionsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Create Question Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="w-[100vw] max-w-none max-h-[90vh] overflow-y-auto p-0">
-          <div className="p-6">
-            <DialogHeader>
-              <DialogTitle>Create Question</DialogTitle>
-              <DialogDescription>
-                Create a new question and add it to this quiz
-              </DialogDescription>
-            </DialogHeader>
-          <div className="grid flex-1 auto-rows-min gap-6 px-4">
-            <div className="grid gap-3">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={createFormData.title}
-                onChange={(e) => setCreateFormData({ ...createFormData, title: e.target.value })}
-                placeholder="Enter question title"
-              />
-            </div>
-            <div className="grid gap-3">
-              <Label htmlFor="content">Content</Label>
-              <RichTextEditor
-                value={createFormData.content}
-                onChange={(value) => setCreateFormData({ ...createFormData, content: value })}
-                placeholder="Enter question content"
-                className="min-h-[200px]"
-              />
-            </div>
-            <div className="grid gap-3">
-              <Label htmlFor="type">Type</Label>
-              <Select
-                value={createFormData.type.toString()}
-                onValueChange={(value: string) => {
-                  const newType = value as QuestionType
-                  let newOptions = ["", ""]
-                  let newCorrectAnswer = ""
-                  
-                  if (newType === QuestionType.TRUE_FALSE) {
-                    newOptions = ["True", "False"]
-                  } else if (newType === QuestionType.MULTI_SELECT) {
-                    newOptions = ["", "", ""]
-                  }
-                  
-                  setCreateFormData({ 
-                    ...createFormData, 
-                    type: newType, 
-                    options: newOptions,
-                    correctAnswer: newCorrectAnswer
-                  })
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select question type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={QuestionType.MULTIPLE_CHOICE}>Multiple Choice</SelectItem>
-                  <SelectItem value={QuestionType.MULTI_SELECT}>Multi-Select</SelectItem>
-                  <SelectItem value={QuestionType.TRUE_FALSE}>True/False</SelectItem>
-                  <SelectItem value={QuestionType.FILL_IN_BLANK}>Fill in the Blank</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-3">
-              <Label htmlFor="difficulty">Difficulty</Label>
-              <Select
-                value={createFormData.difficulty.toString()}
-                onValueChange={(value: string) => setCreateFormData({ ...createFormData, difficulty: value as DifficultyLevel })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select difficulty" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={DifficultyLevel.EASY}>Easy</SelectItem>
-                  <SelectItem value={DifficultyLevel.MEDIUM}>Medium</SelectItem>
-                  <SelectItem value={DifficultyLevel.HARD}>Hard</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {createFormData.type !== QuestionType.FILL_IN_BLANK && (
-              <div className="grid gap-3">
-                <Label>Options</Label>
-                <div className="space-y-2">
-                  {createFormData.type === QuestionType.TRUE_FALSE ? (
-                    // True/False questions get fixed options
-                    <>
-                      <div className="flex items-center space-x-2 p-3 border rounded-md">
-                        <Checkbox
-                          id="option-true"
-                          checked={createFormData.correctAnswer === "True"}
-                          onCheckedChange={(checked) => {
-                            setCreateFormData({ ...createFormData, correctAnswer: checked ? "True" : "" })
-                          }}
-                        />
-                        <label htmlFor="option-true" className="flex-1 cursor-pointer">
-                          True
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2 p-3 border rounded-md">
-                        <Checkbox
-                          id="option-false"
-                          checked={createFormData.correctAnswer === "False"}
-                          onCheckedChange={(checked) => {
-                            setCreateFormData({ ...createFormData, correctAnswer: checked ? "False" : "" })
-                          }}
-                        />
-                        <label htmlFor="option-false" className="flex-1 cursor-pointer">
-                          False
-                        </label>
-                      </div>
-                    </>
-                  ) : (
-                    // Multiple choice and multi-select questions
-                    <>
-                      {createFormData.options.map((option, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <div className="flex items-center space-x-2 p-3 border rounded-md flex-1">
-                            {createFormData.type === QuestionType.MULTIPLE_CHOICE ? (
-                              <Checkbox
-                                id={`option-${index}`}
-                                checked={createFormData.correctAnswer === option}
-                                onCheckedChange={(checked) => {
-                                  setCreateFormData({ ...createFormData, correctAnswer: checked ? option : "" })
-                                }}
-                              />
-                            ) : (
-                              <Checkbox
-                                id={`option-${index}`}
-                                checked={createFormData.correctAnswer ? createFormData.correctAnswer.split('|').includes(option) : false}
-                                onCheckedChange={(checked) => {
-                                  const currentAnswers = createFormData.correctAnswer ? createFormData.correctAnswer.split('|').filter(ans => ans.trim() !== '') : []
-                                  if (checked) {
-                                    currentAnswers.push(option)
-                                  } else {
-                                    const indexToRemove = currentAnswers.indexOf(option)
-                                    if (indexToRemove > -1) {
-                                      currentAnswers.splice(indexToRemove, 1)
-                                    }
-                                  }
-                                  // If no answers selected, set to empty string, otherwise join with pipe
-                                  const newCorrectAnswer = currentAnswers.length === 0 ? "" : currentAnswers.join('|')
-                                  setCreateFormData({ ...createFormData, correctAnswer: newCorrectAnswer })
-                                }}
-                              />
-                            )}
-                            <Input
-                              value={option}
-                              onChange={(e) => {
-                                const newOptions = [...createFormData.options]
-                                newOptions[index] = e.target.value
-                                setCreateFormData({ ...createFormData, options: newOptions })
-                              }}
-                              placeholder={`Option ${index + 1}`}
-                              className="flex-1"
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const newOptions = [...createFormData.options, ""]
-                              setCreateFormData({ ...createFormData, options: newOptions })
-                            }}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                          {createFormData.options.length > 2 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const newOptions = createFormData.options.filter((_, i) => i !== index)
-                                // Remove from correct answer if it's there
-                                let newCorrectAnswer = createFormData.correctAnswer
-                                if (createFormData.type === QuestionType.MULTIPLE_CHOICE && newCorrectAnswer === option) {
-                                  newCorrectAnswer = ""
-                                } else if (createFormData.type === QuestionType.MULTI_SELECT) {
-                                  const answers = newCorrectAnswer.split('|').filter(ans => ans !== option)
-                                  newCorrectAnswer = answers.join('|')
-                                }
-                                setCreateFormData({ ...createFormData, options: newOptions, correctAnswer: newCorrectAnswer })
-                              }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-            {createFormData.type === QuestionType.FILL_IN_BLANK && (
-              <div className="grid gap-3">
-                <Label htmlFor="correctAnswer">Correct Answer</Label>
-                <Input
-                  id="correctAnswer"
-                  value={createFormData.correctAnswer}
-                  onChange={(e) => setCreateFormData({ ...createFormData, correctAnswer: e.target.value })}
-                  placeholder="Enter correct answer"
-                />
-              </div>
-            )}
-            <div className="grid gap-3">
-              <Label htmlFor="points">Points</Label>
-              <Input
-                id="points"
-                type="number"
-                value={createFormData.points}
-                onChange={(e) => setCreateFormData({ ...createFormData, points: parseFloat(e.target.value) || 1.0 })}
-                placeholder="1"
-              />
-            </div>
-            <div className="grid gap-3">
-              <Label htmlFor="explanation">Explanation</Label>
-              <RichTextEditor
-                value={createFormData.explanation}
-                onChange={(value) => setCreateFormData({ ...createFormData, explanation: value })}
-                placeholder="Optional explanation for the answer"
-                className="min-h-[150px]"
-              />
-            </div>
-          </div>
-          </div>
-          <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateQuestion}>
-              Create and Add to Quiz
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Import Questions Sheet */}
       <Sheet open={isImportSheetOpen} onOpenChange={setIsImportSheetOpen}>
         <SheetContent className=" sm:w-[90vw] min-h-[100vh]">
           <SheetHeader>
             <SheetTitle>Import Questions</SheetTitle>
             <SheetDescription>
-              Import questions from a CSV file and add them to a question group
+              Import questions from a CSV file and add & eroll them to a question group
             </SheetDescription>
           </SheetHeader>
           
