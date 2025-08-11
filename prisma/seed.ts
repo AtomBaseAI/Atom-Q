@@ -10,9 +10,9 @@ async function main() {
   await prisma.quizAttempt.deleteMany()
   await prisma.quizUser.deleteMany()
   await prisma.quizQuestion.deleteMany()
+  await prisma.question.deleteMany()
   await prisma.questionGroup.deleteMany()
   await prisma.quiz.deleteMany()
-  await prisma.question.deleteMany()
   await prisma.user.deleteMany()
 
   console.log('Cleaned existing data...')

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -268,6 +269,7 @@ export default function QuizQuestionsPage() {
   const [selectedQuestionGroup, setSelectedQuestionGroup] = useState<string>("")
   const [importFile, setImportFile] = useState<File | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -525,6 +527,8 @@ export default function QuizQuestionsPage() {
       return
     }
 
+    setIsImporting(true)
+
     Papa.parse(importFile, {
       header: true,
       skipEmptyLines: true,
@@ -594,7 +598,6 @@ export default function QuizQuestionsPage() {
                   correctAnswer: question["Correct Answer"]?.toString(),
                   explanation: question.Explanation?.trim() || "",
                   difficulty: question.Difficulty?.toUpperCase() || "MEDIUM",
-                  points: parseFloat(question.Points) || 1.0,
                   groupId: selectedQuestionGroup
                 }),
               })
@@ -630,18 +633,22 @@ export default function QuizQuestionsPage() {
             setSelectedQuestionGroup("")
             fetchQuestions()
             fetchAvailableQuestions()
+            setIsImporting(false)
           } else {
             toast.error("Questions were imported but failed to enroll to quiz")
+            setIsImporting(false)
           }
 
         } catch (error) {
           console.error("Import error:", error)
           toast.error(`Failed to import questions: ${error instanceof Error ? error.message : "Unknown error"}`)
+          setIsImporting(false)
         }
       },
       error: (error) => {
         console.error("CSV parsing error:", error)
         toast.error("Failed to parse CSV file")
+        setIsImporting(false)
       }
     })
   }
@@ -1357,12 +1364,14 @@ export default function QuizQuestionsPage() {
             <Button variant="outline" onClick={() => setIsImportSheetOpen(false)}>
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               onClick={handleImportWithGroup}
               disabled={!selectedQuestionGroup || !importFile}
+              isLoading={isImporting}
+              loadingText="Importing..."
             >
               Import Questions
-            </Button>
+            </LoadingButton>
           </SheetFooter>
         </SheetContent>
       </Sheet>

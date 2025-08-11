@@ -69,6 +69,7 @@ export async function POST(
       explanation,
       difficulty,
       categoryId,
+      groupId,
       isActive = true
     } = body
 
@@ -76,6 +77,14 @@ export async function POST(
     if (!title || !content || !type || !options || !correctAnswer) {
       return NextResponse.json(
         { message: "Missing required fields" },
+        { status: 400 }
+      )
+    }
+
+    // Validate that groupId is provided for question creation
+    if (!groupId) {
+      return NextResponse.json(
+        { message: "Question group is required" },
         { status: 400 }
       )
     }
@@ -139,7 +148,8 @@ export async function POST(
         correctAnswer,
         explanation,
         difficulty: difficulty || DifficultyLevel.MEDIUM,
-        isActive
+        isActive,
+        groupId
       }
     })
 
