@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Sheet,
@@ -86,6 +87,7 @@ export default function QuizUsersPage() {
   const [userToUnenroll, setUserToUnenroll] = useState<User | null>(null)
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  const [isUnenrolling, setIsUnenrolling] = useState(false)
 
   // Filter states for enrollment popup
   const [enrollSearchTerm, setEnrollSearchTerm] = useState("")
@@ -185,6 +187,8 @@ export default function QuizUsersPage() {
   const handleUnenrollUser = async () => {
     if (!userToUnenroll) return
 
+    setIsUnenrolling(true)
+
     try {
       const response = await fetch(`/api/admin/quiz/${quizId}/users/${userToUnenroll.id}`, {
         method: 'DELETE'
@@ -201,6 +205,8 @@ export default function QuizUsersPage() {
       }
     } catch (error) {
       toast.error('Failed to unenroll user')
+    } finally {
+      setIsUnenrolling(false)
     }
   }
 
@@ -534,12 +540,14 @@ export default function QuizUsersPage() {
             <AlertDialogCancel onClick={() => setUserToUnenroll(null)}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction
+            <LoadingButton
               onClick={handleUnenrollUser}
+              isLoading={isUnenrolling}
+              loadingText="Unenrolling..."
               className="bg-red-600 hover:bg-red-700"
             >
               Unenroll User
-            </AlertDialogAction>
+            </LoadingButton>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

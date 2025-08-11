@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
+import { LoadingButton } from "@/components/ui/laodaing-button"
 import { Clock, FileText, Trophy, AlertCircle, Play, RotateCcw, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -43,6 +44,7 @@ export default function UserQuizPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("")
+  const [startingQuizId, setStartingQuizId] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === "loading") return
@@ -88,6 +90,8 @@ export default function UserQuizPage() {
   }
 
   const handleStartQuiz = async (quizId: string) => {
+    setStartingQuizId(quizId)
+    
     try {
       const response = await fetch(`/api/user/quiz/${quizId}/start`, {
         method: "POST",
@@ -104,6 +108,8 @@ export default function UserQuizPage() {
     } catch (error: any) {
       console.error("Error starting quiz:", error)
       toast.error(error.message || "Failed to start quiz")
+    } finally {
+      setStartingQuizId(null)
     }
   }
 
@@ -299,9 +305,11 @@ export default function UserQuizPage() {
               </CardContent>
 
               <CardFooter>
-                <Button
+                <LoadingButton
                   onClick={() => handleStartQuiz(quiz.id)}
                   disabled={!quiz.canAttempt}
+                  isLoading={startingQuizId === quiz.id}
+                  loadingText={quiz.hasInProgress ? "Continuing..." : quiz.attemptStatus === "completed" ? "Retaking..." : "Starting..."}
                   className="w-full"
                   variant={quiz.hasInProgress ? "default" : "default"}
                 >
@@ -321,7 +329,7 @@ export default function UserQuizPage() {
                       Start Quiz
                     </>
                   )}
-                </Button>
+                </LoadingButton>
               </CardFooter>
             </Card>
           ))}
