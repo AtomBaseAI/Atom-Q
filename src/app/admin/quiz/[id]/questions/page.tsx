@@ -256,21 +256,10 @@ export default function QuizQuestionsPage() {
   const [popupSearchTerm, setPopupSearchTerm] = useState("")
   const [popupDifficultyFilter, setPopupDifficultyFilter] = useState<string>("all")
   const [popupGroupFilter, setPopupGroupFilter] = useState<string>("all")
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [quizTitle, setQuizTitle] = useState("")
   const [selectedQuestionsToAdd, setSelectedQuestionsToAdd] = useState<string[]>([])
-  const [createFormData, setCreateFormData] = useState({
-    title: "",
-    content: "",
-    type: "MULTIPLE_CHOICE" as QuestionType,
-    options: ["", ""],
-    correctAnswer: "",
-    explanation: "",
-    difficulty: "MEDIUM" as DifficultyLevel,
-    points: 1.0
-  })
   const [deleteQuestionId, setDeleteQuestionId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -429,55 +418,6 @@ export default function QuizQuestionsPage() {
       }
     } catch (error) {
       toast.error("Failed to enroll questions")
-    }
-  }
-
-  const handleCreateQuestion = async () => {
-    // Validate that at least one correct answer is selected for multi-select questions
-    if (createFormData.type === QuestionType.MULTI_SELECT && !createFormData.correctAnswer) {
-      toast.error("Please select at least one correct answer for multi-select questions")
-      return
-    }
-    
-    // Validate that correct answer is provided for other question types (except fill-in-blank which is handled separately)
-    if (createFormData.type !== QuestionType.FILL_IN_BLANK && !createFormData.correctAnswer) {
-      toast.error("Please select a correct answer")
-      return
-    }
-    
-    try {
-      const response = await fetch(`/api/admin/quiz/${quizId}/questions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...createFormData,
-          options: createFormData.options.filter(opt => opt.trim() !== "")
-        }),
-      })
-
-      if (response.ok) {
-        toast.success("Question created and added to quiz")
-        setIsCreateDialogOpen(false)
-        setCreateFormData({
-          title: "",
-          content: "",
-          type: "MULTIPLE_CHOICE" as QuestionType,
-          options: ["", ""],
-          correctAnswer: "",
-          explanation: "",
-          difficulty: "MEDIUM" as DifficultyLevel,
-          points: 1.0
-        })
-        fetchQuestions()
-        fetchAvailableQuestions()
-      } else {
-        const error = await response.json()
-        toast.error(error.message || "Failed to create question")
-      }
-    } catch (error) {
-      toast.error("Failed to create question")
     }
   }
 
