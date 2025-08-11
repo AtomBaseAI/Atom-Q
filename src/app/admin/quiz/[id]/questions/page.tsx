@@ -1327,12 +1327,12 @@ export default function QuizQuestionsPage() {
             </SheetDescription>
           </SheetHeader>
           
-          <div className="mt-6 space-y-6">
+          <div className="mt-6 space-y-6 px-4">
             {/* Question Group Selection */}
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <Label htmlFor="questionGroup">Question Group *</Label>
               <Select value={selectedQuestionGroup} onValueChange={setSelectedQuestionGroup}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a question group" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1410,18 +1410,6 @@ export default function QuizQuestionsPage() {
                 onChange={handleFileSelect}
                 className="hidden"
               />
-            </div>
-
-            {/* CSV Format Instructions */}
-            <div className="space-y-2">
-              <Label>CSV Format Requirements</Label>
-              <div className="bg-muted/50 p-4 rounded-lg space-y-2 text-sm">
-                <p><strong>Required columns:</strong> Title, Content, Type, Options, Correct Answer</p>
-                <p><strong>Optional columns:</strong> Explanation, Difficulty, Points</p>
-                <p><strong>Options format:</strong> Use pipe (|) separated values or JSON array format</p>
-                <p><strong>Supported types:</strong> MULTIPLE_CHOICE, MULTI_SELECT, TRUE_FALSE, FILL_IN_BLANK</p>
-                <p><strong>Difficulties:</strong> EASY, MEDIUM, HARD</p>
-              </div>
             </div>
           </div>
 
