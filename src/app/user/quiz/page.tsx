@@ -286,19 +286,31 @@ export default function UserQuizPage() {
                 )}
 
                 {quiz.startTime && new Date(quiz.startTime) > new Date() && (
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
+                  <Alert className="border-yellow-200 bg-yellow-50">
+                    <AlertCircle className="h-4 w-4 text-yellow-600" />
+                    <AlertDescription className="text-yellow-800">
+                      <strong>Quiz not available yet</strong><br />
                       Available from: {new Date(quiz.startTime).toLocaleString()}
                     </AlertDescription>
                   </Alert>
                 )}
 
-                {quiz.endTime && (
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      Deadline: {new Date(quiz.endTime).toLocaleString()}
+                {quiz.endTime && new Date(quiz.endTime) < new Date() && (
+                  <Alert className="border-red-200 bg-red-50">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <AlertDescription className="text-red-800">
+                      <strong>Quiz expired</strong><br />
+                      Deadline was: {new Date(quiz.endTime).toLocaleString()}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {quiz.startTime && quiz.endTime && new Date(quiz.startTime) <= new Date() && new Date(quiz.endTime) >= new Date() && (
+                  <Alert className="border-green-200 bg-green-50">
+                    <AlertCircle className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-green-800">
+                      <strong>Quiz available now</strong><br />
+                      Available until: {new Date(quiz.endTime).toLocaleString()}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -322,6 +334,16 @@ export default function UserQuizPage() {
                     <>
                       <RotateCcw className="w-4 h-4 mr-2" />
                       Retake Quiz
+                    </>
+                  ) : quiz.attemptStatus === "expired" ? (
+                    <>
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      Quiz Expired
+                    </>
+                  ) : quiz.startTime && new Date(quiz.startTime) > new Date() ? (
+                    <>
+                      <Clock className="w-4 h-4 mr-2" />
+                      Not Available Yet
                     </>
                   ) : (
                     <>

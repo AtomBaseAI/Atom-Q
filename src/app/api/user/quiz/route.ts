@@ -86,16 +86,25 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Check time constraints
+      // Check time constraints with proper timezone handling
       const now = new Date()
-      if (quiz.startTime && new Date(quiz.startTime) > now) {
+      const startTime = quiz.startTime ? new Date(quiz.startTime) : null
+      const endTime = quiz.endTime ? new Date(quiz.endTime) : null
+      
+      if (startTime && startTime > now) {
         canAttempt = false
         attemptStatus = 'not_started'
       }
       
-      if (quiz.endTime && new Date(quiz.endTime) < now) {
+      if (endTime && endTime < now) {
         canAttempt = false
         attemptStatus = 'expired'
+      }
+      
+      // Additional validation: ensure end time is after start time if both are set
+      if (startTime && endTime && endTime <= startTime) {
+        canAttempt = false
+        attemptStatus = 'not_started'
       }
 
       return {

@@ -228,6 +228,22 @@ export default function QuizzesPage() {
       },
     },
     {
+      accessorKey: "startTime",
+      header: "Start Date",
+      cell: ({ row }) => {
+        const startTime = row.getValue("startTime") as string
+        return startTime ? new Date(startTime).toLocaleDateString() : "Not set"
+      },
+    },
+    {
+      accessorKey: "endTime",
+      header: "End Date",
+      cell: ({ row }) => {
+        const endTime = row.getValue("endTime") as string
+        return endTime ? new Date(endTime).toLocaleDateString() : "Not set"
+      },
+    },
+    {
       accessorKey: "_count.quizAttempts",
       header: "Total Submissions",
       cell: ({ row }) => {
@@ -319,6 +335,17 @@ export default function QuizzesPage() {
     e.preventDefault()
     setSubmitLoading(true)
 
+    // Validate date inputs
+    if (createFormData.startTime && createFormData.endTime) {
+      const startTime = new Date(createFormData.startTime)
+      const endTime = new Date(createFormData.endTime)
+      if (endTime <= startTime) {
+        toasts.error("End date must be after start date")
+        setSubmitLoading(false)
+        return
+      }
+    }
+
     try {
       const response = await fetch("/api/admin/quiz", {
         method: "POST",
@@ -356,6 +383,17 @@ export default function QuizzesPage() {
     setSubmitLoading(true)
 
     if (!selectedQuiz) return
+
+    // Validate date inputs
+    if (editFormData.startTime && editFormData.endTime) {
+      const startTime = new Date(editFormData.startTime)
+      const endTime = new Date(editFormData.endTime)
+      if (endTime <= startTime) {
+        toasts.error("End date must be after start date")
+        setSubmitLoading(false)
+        return
+      }
+    }
 
     try {
       const response = await fetch(`/api/admin/quiz/${selectedQuiz.id}`, {
