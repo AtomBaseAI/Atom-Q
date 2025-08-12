@@ -40,6 +40,14 @@ import {
 import { toasts } from "@/lib/toasts"
 import HexagonLoader from "@/components/Loader/Loading"
 
+// Helper function to format dates in dd/mm/yyyy format
+const formatDateDDMMYYYY = (dateString: string) => {
+  const date = new Date(dateString)
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
 
 interface Quiz {
   id: string
@@ -349,7 +357,7 @@ export default function AnalysisPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {new Date(entry.submittedAt).toLocaleDateString()}
+                      {formatDateDDMMYYYY(entry.submittedAt)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -422,7 +430,7 @@ export default function AnalysisPage() {
                       {entry.errors !== undefined ? entry.errors : '-'}
                     </TableCell>
                     <TableCell>
-                      {entry.submittedAt ? new Date(entry.submittedAt).toLocaleDateString() : '-'}
+                      {entry.submittedAt ? formatDateDDMMYYYY(entry.submittedAt) : '-'}
                     </TableCell>
                   </TableRow>
                 ))}

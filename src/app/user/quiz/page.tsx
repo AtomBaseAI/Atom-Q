@@ -13,6 +13,26 @@ import { LoadingButton } from "@/components/ui/laodaing-button"
 import { Clock, FileText, Trophy, AlertCircle, Play, RotateCcw, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 
+// Helper function to format dates in dd/mm/yyyy format
+const formatDateDDMMYYYY = (dateString: string) => {
+  const date = new Date(dateString)
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
+// Helper function to format dates in dd/mm/yyyy HH:mm format
+const formatDateDDMMYYYYTime = (dateString: string) => {
+  const date = new Date(dateString)
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${day}/${month}/${year} ${hours}:${minutes}`
+}
+
 interface Quiz {
   id: string
   title: string
@@ -290,7 +310,7 @@ export default function UserQuizPage() {
                     <AlertCircle className="h-4 w-4 text-yellow-600" />
                     <AlertDescription className="text-yellow-800">
                       <strong>Quiz not available yet</strong><br />
-                      Available from: {new Date(quiz.startTime).toLocaleString()}
+                      Available from: {formatDateDDMMYYYYTime(quiz.startTime)}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -300,7 +320,7 @@ export default function UserQuizPage() {
                     <AlertCircle className="h-4 w-4 text-red-600" />
                     <AlertDescription className="text-red-800">
                       <strong>Quiz expired</strong><br />
-                      Deadline was: {new Date(quiz.endTime).toLocaleString()}
+                      Deadline was: {formatDateDDMMYYYYTime(quiz.endTime)}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -310,7 +330,7 @@ export default function UserQuizPage() {
                     <AlertCircle className="h-4 w-4 text-green-600" />
                     <AlertDescription className="text-green-800">
                       <strong>Quiz available now</strong><br />
-                      Available until: {new Date(quiz.endTime).toLocaleString()}
+                      Available until: {formatDateDDMMYYYYTime(quiz.endTime)}
                     </AlertDescription>
                   </Alert>
                 )}

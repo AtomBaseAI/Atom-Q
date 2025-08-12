@@ -19,6 +19,15 @@ import {
 import { toast } from "sonner"
 import { QuestionType, DifficultyLevel } from "@prisma/client"
 
+// Helper function to format dates in dd/mm/yyyy format
+const formatDateDDMMYYYY = (dateString: string) => {
+  const date = new Date(dateString)
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
 interface QuizResult {
   id: string
   quiz: {
@@ -142,7 +151,7 @@ export default function QuizResultPage() {
             )}
           </div>
           <CardTitle className="text-2xl">{result.quiz.title}</CardTitle>
-          <CardDescription>Quiz completed on {new Date(result.submittedAt).toLocaleDateString()}</CardDescription>
+          <CardDescription>Quiz completed on {formatDateDDMMYYYY(result.submittedAt)}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Score Display */}

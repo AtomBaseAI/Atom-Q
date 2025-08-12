@@ -21,6 +21,15 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useQuizCacheStore } from "@/stores/quiz-cache"
 import HexagonLoader from "@/components/Loader/Loading"
 
+// Helper function to format dates in dd/mm/yyyy format
+const formatDateDDMMYYYY = (dateString: string) => {
+  const date = new Date(dateString)
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
 interface UserStats {
   totalQuizzes: number
   completedQuizzes: number
@@ -298,7 +307,7 @@ export default function UserDashboard() {
                         </div>
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {new Date(activity.submittedAt).toLocaleDateString()}
+                          {formatDateDDMMYYYY(activity.submittedAt)}
                         </div>
                       </div>
                     </div>
@@ -366,7 +375,7 @@ export default function UserDashboard() {
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        {new Date(activity.submittedAt).toLocaleDateString()}
+                        {formatDateDDMMYYYY(activity.submittedAt)}
                       </div>
                     </div>
                   </div>

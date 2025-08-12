@@ -61,6 +61,15 @@ import { ColumnDef } from "@tanstack/react-table"
 import HexagonLoader from "@/components/Loader/Loading"
 import { LoadingButton } from "@/components/ui/laodaing-button"
 
+// Helper function to format dates in dd/mm/yyyy format
+const formatDateDDMMYYYY = (dateString: string) => {
+  const date = new Date(dateString)
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
 interface Quiz {
   id: string
   title: string
@@ -232,7 +241,7 @@ export default function QuizzesPage() {
       header: "Start Date",
       cell: ({ row }) => {
         const startTime = row.getValue("startTime") as string
-        return startTime ? new Date(startTime).toLocaleDateString() : "Not set"
+        return startTime ? formatDateDDMMYYYY(startTime) : "Not set"
       },
     },
     {
@@ -240,7 +249,7 @@ export default function QuizzesPage() {
       header: "End Date",
       cell: ({ row }) => {
         const endTime = row.getValue("endTime") as string
-        return endTime ? new Date(endTime).toLocaleDateString() : "Not set"
+        return endTime ? formatDateDDMMYYYY(endTime) : "Not set"
       },
     },
     {
@@ -266,7 +275,7 @@ export default function QuizzesPage() {
       },
       cell: ({ row }) => {
         const date = new Date(row.getValue("createdAt"))
-        return date.toLocaleDateString()
+        return formatDateDDMMYYYY(date.toISOString())
       },
     },
     {
