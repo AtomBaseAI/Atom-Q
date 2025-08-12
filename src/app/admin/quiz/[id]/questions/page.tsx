@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
+import { RichTextDisplay } from "@/components/ui/rich-text-display"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
@@ -170,7 +171,7 @@ function SortableQuestion({
         <div>
           <div className="font-medium">{question.title}</div>
           <div className="text-sm text-muted-foreground">
-            {question.content}
+            <RichTextDisplay content={question.content} />
           </div>
         </div>
       </TableCell>
@@ -1185,7 +1186,9 @@ export default function QuizQuestionsPage() {
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Content</Label>
-                  <p className="text-sm">{selectedQuestion.content}</p>
+                  <div className="text-sm">
+                    <RichTextDisplay content={selectedQuestion.content} />
+                  </div>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Type</Label>
@@ -1237,7 +1240,9 @@ export default function QuizQuestionsPage() {
                 {selectedQuestion.explanation && (
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">Explanation</Label>
-                    <p className="text-sm">{selectedQuestion.explanation}</p>
+                    <div className="text-sm">
+                      <RichTextDisplay content={selectedQuestion.explanation} />
+                    </div>
                   </div>
                 )}
                 <div>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
+import { RichTextDisplay } from "@/components/ui/rich-text-display"
 import { 
   CheckCircle, 
   XCircle, 
@@ -238,9 +239,9 @@ export default function QuizResultPage() {
                     </Badge>
                   </div>
                   <h3 className="font-medium">{answer.question.title}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {answer.question.content}
-                  </p>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    <RichTextDisplay content={answer.question.content} />
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {answer.isCorrect ? (
@@ -271,9 +272,9 @@ export default function QuizResultPage() {
                 {answer.question.explanation && (
                   <div>
                     <span className="text-sm font-medium">Explanation: </span>
-                    <span className="text-sm text-muted-foreground">
-                      {answer.question.explanation}
-                    </span>
+                    <div className="text-sm text-muted-foreground">
+                      <RichTextDisplay content={answer.question.explanation} />
+                    </div>
                   </div>
                 )}
               </div>
