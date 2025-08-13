@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -70,6 +70,7 @@ export default function QuizTakingPage() {
   const [showAnswer, setShowAnswer] = useState<string | null>(null)
   const [canShowAnswers, setCanShowAnswers] = useState(false)
   const [checkedAnswers, setCheckedAnswers] = useState<Set<string>>(new Set())
+  const paginationContainerRef = useRef<HTMLDivElement>(null)
 
   const fetchQuiz = useCallback(async () => {
     try {
@@ -186,7 +187,27 @@ export default function QuizTakingPage() {
     }
   }, [timeRemaining, submitting, attemptId, answers, params.id, router])
 
-  // Fullscreen handling
+  // Auto-scroll pagination to active question
+  useEffect(() => {
+    if (paginationContainerRef.current && quiz) {
+      const container = paginationContainerRef.current
+      const activeButton = container.querySelector(`[data-question-index="${currentQuestionIndex}"]`) as HTMLElement
+      
+      if (activeButton) {
+        const containerRect = container.getBoundingClientRect()
+        const buttonRect = activeButton.getBoundingClientRect()
+        
+        // Calculate the scroll position to center the active button
+        const scrollLeft = buttonRect.left - containerRect.left - containerRect.width / 2 + buttonRect.width / 2
+        
+        // Smooth scroll to the active button
+        container.scrollTo({
+          left: container.scrollLeft + scrollLeft,
+          behavior: 'smooth'
+        })
+      }
+    }
+  }, [currentQuestionIndex, quiz])
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement)
@@ -264,6 +285,10 @@ export default function QuizTakingPage() {
     }
   }
 
+  const goToQuestion = (index: number) => {
+    setCurrentQuestionIndex(index)
+  }
+
   const handleSubmit = async () => {
     if (submitting) return
 
@@ -311,6 +336,32 @@ export default function QuizTakingPage() {
     const remainingSeconds = seconds % 60
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
   }
+
+  const scrollToActiveQuestion = useCallback(() => {
+    if (paginationContainerRef.current) {
+      const container = paginationContainerRef.current
+      const activeButton = container.querySelector(`[data-question-index="${currentQuestionIndex}"]`) as HTMLElement
+      
+      if (activeButton) {
+        const containerRect = container.getBoundingClientRect()
+        const buttonRect = activeButton.getBoundingClientRect()
+        
+        // Calculate the scroll position to center the active button
+        const scrollLeft = buttonRect.left - containerRect.left + container.scrollLeft - (containerRect.width / 2) + (buttonRect.width / 2)
+        
+        // Smooth scroll to the active button
+        container.scrollTo({
+          left: scrollLeft,
+          behavior: 'smooth'
+        })
+      }
+    }
+  }, [currentQuestionIndex])
+
+  // Scroll to active question when currentQuestionIndex changes
+  useEffect(() => {
+    scrollToActiveQuestion()
+  }, [currentQuestionIndex, scrollToActiveQuestion])
 
   const formatQuestionType = (type: QuestionType) => {
     switch (type) {
@@ -808,24 +859,32 @@ export default function QuizTakingPage() {
             </Button>
           </motion.div>
 
-          <div className="flex space-x-2">
-            {quiz.questions.map((_, index) => (
-              <motion.button
-                key={index}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setCurrentQuestionIndex(index)}
-                className={`w-8 h-8 rounded-full text-sm font-medium transition-all ${
-                  index === currentQuestionIndex
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : isQuestionAnswered(quiz.questions[index])
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
-                }`}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="max-w-md mx-auto">
+              <div 
+                ref={paginationContainerRef}
+                className="flex items-center space-x-1 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800"
               >
-                {index + 1}
-              </motion.button>
-            ))}
+                {quiz.questions.map((_, index) => (
+                  <motion.button
+                    key={index}
+                    data-question-index={index}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => goToQuestion(index)}
+                    className={`flex-shrink-0 w-8 h-8 rounded-full text-sm font-medium transition-all ${
+                      index === currentQuestionIndex
+                        ? 'bg-blue-500 text-white shadow-lg'
+                        : isQuestionAnswered(quiz.questions[index])
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {index + 1}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <motion.div
