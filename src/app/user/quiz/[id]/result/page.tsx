@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { RichTextDisplay } from "@/components/ui/rich-text-display"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
   CheckCircle, 
   XCircle, 
@@ -15,7 +16,10 @@ import {
   Target,
   Trophy,
   ArrowLeft,
-  Award
+  Award,
+  List,
+  Check,
+  X
 } from "lucide-react"
 import { toast } from "sonner"
 import { QuestionType, DifficultyLevel } from "@prisma/client"
@@ -64,6 +68,7 @@ export default function QuizResultPage() {
 
   const [result, setResult] = useState<QuizResult | null>(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("all")
 
   useEffect(() => {
     fetchResult()
@@ -117,6 +122,28 @@ export default function QuizResultPage() {
     return result.answers.filter(answer => answer.isCorrect).length
   }
 
+  const getFilteredAnswers = () => {
+    if (!result) return []
+    switch (activeTab) {
+      case "success":
+        return result.answers.filter(answer => answer.isCorrect)
+      case "failed":
+        return result.answers.filter(answer => !answer.isCorrect)
+      default:
+        return result.answers
+    }
+  }
+
+  const getSuccessCount = () => {
+    if (!result) return 0
+    return result.answers.filter(answer => answer.isCorrect).length
+  }
+
+  const getFailedCount = () => {
+    if (!result) return 0
+    return result.answers.filter(answer => !answer.isCorrect).length
+  }
+
   if (loading) {
     return <div className="flex items-center justify-center h-64">Loading result...</div>
   }
@@ -128,169 +155,238 @@ export default function QuizResultPage() {
   const scorePercentage = getScorePercentage()
   const correctAnswers = getCorrectAnswersCount()
   const totalQuestions = result.answers.length
+  const filteredAnswers = getFilteredAnswers()
+  const successCount = getSuccessCount()
+  const failedCount = getFailedCount()
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={() => router.push("/user/quiz")}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Quizzes
-        </Button>
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" onClick={() => router.push("/user/quiz")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Quizzes
+            </Button>
+            <div className="text-center">
+              <h1 className="text-2xl font-bold">{result.quiz.title}</h1>
+              <p className="text-sm text-muted-foreground">
+                Completed on {formatDateDDMMYYYY(result.submittedAt)}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="text-right">
+                <div className={`text-2xl font-bold ${getScoreColor(scorePercentage)}`}>
+                  {result.score}/{result.totalPoints}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {scorePercentage}%
+                </div>
+              </div>
+              {scorePercentage >= 80 ? (
+                <Trophy className="h-8 w-8 text-yellow-500" />
+              ) : scorePercentage >= 60 ? (
+                <Award className="h-8 w-8 text-blue-500" />
+              ) : (
+                <Target className="h-8 w-8 text-gray-500" />
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Quiz Result Summary */}
-      <Card>
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            {scorePercentage >= 80 ? (
-              <Trophy className="h-16 w-16 text-yellow-500" />
-            ) : scorePercentage >= 60 ? (
-              <Award className="h-16 w-16 text-blue-500" />
-            ) : (
-              <Target className="h-16 w-16 text-gray-500" />
-            )}
-          </div>
-          <CardTitle className="text-2xl">{result.quiz.title}</CardTitle>
-          <CardDescription>Quiz completed on {formatDateDDMMYYYY(result.submittedAt)}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Score Display */}
-          <div className="text-center space-y-2">
-            <div className={`text-4xl font-bold ${getScoreColor(scorePercentage)}`}>
-              {result.score}/{result.totalPoints}
-            </div>
-            <div className="text-lg text-muted-foreground">
-              {scorePercentage}% Score
-            </div>
-            <Progress value={scorePercentage} className="w-full max-w-md mx-auto" />
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  Correct Answers
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  {correctAnswers}/{totalQuestions}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-blue-600" />
-                  Time Taken
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">
-                  {formatTime(result.timeTaken)}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Target className="h-4 w-4 text-purple-600" />
-                  Points Earned
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-purple-600">
-                  {result.score}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Question Review */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Question Review</CardTitle>
-          <CardDescription>
-            Review your answers and see the correct solutions
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {result.answers.map((answer, index) => (
-            <div key={answer.questionId} className="space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-medium">Question {index + 1}</span>
-                    <Badge variant={
-                      answer.question.difficulty === DifficultyLevel.EASY ? "default" :
-                      answer.question.difficulty === DifficultyLevel.MEDIUM ? "secondary" : "destructive"
-                    }>
-                      {answer.question.difficulty}
-                    </Badge>
-                    <Badge variant="outline">
-                      {answer.pointsEarned}/{answer.pointsEarned + (answer.isCorrect ? 0 : 1)} points
-                    </Badge>
-                  </div>
-                  <h3 className="font-medium">{answer.question.title}</h3>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    <RichTextDisplay content={answer.question.content} />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {answer.isCorrect ? (
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-red-600" />
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-3 pl-4 border-l-2 border-gray-200">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-white/90 dark:bg-gray-800/90">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-sm font-medium">Your Answer: </span>
-                  <span className={`text-sm ${answer.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                    {answer.userAnswer || "Not answered"}
-                  </span>
+                  <p className="text-sm text-muted-foreground">Score</p>
+                  <p className={`text-2xl font-bold ${getScoreColor(scorePercentage)}`}>
+                    {scorePercentage}%
+                  </p>
                 </div>
-
-                {!answer.isCorrect && (
-                  <div>
-                    <span className="text-sm font-medium">Correct Answer: </span>
-                    <span className="text-sm text-green-600">
-                      {answer.question.correctAnswer}
-                    </span>
-                  </div>
-                )}
-
-                {answer.question.explanation && (
-                  <div>
-                    <span className="text-sm font-medium">Explanation: </span>
-                    <div className="text-sm text-muted-foreground">
-                      <RichTextDisplay content={answer.question.explanation} />
-                    </div>
-                  </div>
-                )}
+                <Target className="h-8 w-8 text-purple-600" />
               </div>
+              <Progress value={scorePercentage} className="mt-2" />
+            </CardContent>
+          </Card>
 
-              {index < result.answers.length - 1 && <Separator />}
+          <Card className="bg-white/90 dark:bg-gray-800/90">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Correct</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {correctAnswers}/{totalQuestions}
+                  </p>
+                </div>
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/90 dark:bg-gray-800/90">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Time Taken</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {formatTime(result.timeTaken)}
+                  </p>
+                </div>
+                <Clock className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/90 dark:bg-gray-800/90">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Points</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {result.score}
+                  </p>
+                </div>
+                <Award className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tabs for Filtering */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="all" className="flex items-center gap-2">
+              <List className="h-4 w-4" />
+              All ({totalQuestions})
+            </TabsTrigger>
+            <TabsTrigger value="success" className="flex items-center gap-2">
+              <Check className="h-4 w-4" />
+              Success ({successCount})
+            </TabsTrigger>
+            <TabsTrigger value="failed" className="flex items-center gap-2">
+              <X className="h-4 w-4" />
+              Failed ({failedCount})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredAnswers.map((answer, index) => (
+                <QuestionCard key={answer.questionId} answer={answer} index={index} />
+              ))}
             </div>
-          ))}
-        </CardContent>
-      </Card>
+          </TabsContent>
 
-      {/* Actions */}
-      <div className="flex justify-center">
-        <Button onClick={() => router.push("/user/quiz")} size="lg">
-          Take Another Quiz
-        </Button>
+          <TabsContent value="success" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredAnswers.map((answer, index) => (
+                <QuestionCard key={answer.questionId} answer={answer} index={index} />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="failed" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredAnswers.map((answer, index) => (
+                <QuestionCard key={answer.questionId} answer={answer} index={index} />
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Actions */}
+        <div className="flex justify-center mt-8">
+          <Button onClick={() => router.push("/user/quiz")} size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+            Take Another Quiz
+          </Button>
+        </div>
       </div>
     </div>
+  )
+}
+
+// Question Card Component for compact layout
+function QuestionCard({ answer, index }: { answer: QuizResult["answers"][0]; index: number }) {
+  return (
+    <Card className={`h-fit transition-all hover:shadow-md ${
+      answer.isCorrect 
+        ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/20' 
+        : 'border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/20'
+    }`}>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-medium">Q{index + 1}</span>
+              <Badge variant={
+                answer.question.difficulty === DifficultyLevel.EASY ? "default" :
+                answer.question.difficulty === DifficultyLevel.MEDIUM ? "secondary" : "destructive"
+              } className="text-xs">
+                {answer.question.difficulty}
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                {answer.pointsEarned}/{answer.pointsEarned + (answer.isCorrect ? 0 : 1)} pts
+              </Badge>
+            </div>
+            <h3 className="font-medium text-sm leading-tight line-clamp-2">
+              {answer.question.title}
+            </h3>
+          </div>
+          <div className="flex items-center gap-2 ml-2">
+            {answer.isCorrect ? (
+              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+            ) : (
+              <XCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-3">
+        {/* Question Content */}
+        <div className="text-sm text-muted-foreground">
+          <RichTextDisplay content={answer.question.content} />
+        </div>
+
+        {/* Answers */}
+        <div className="space-y-2">
+          <div className="flex items-start gap-2">
+            <span className="text-xs font-medium text-muted-foreground min-w-fit">Your Answer:</span>
+            <span className={`text-xs break-words ${
+              answer.isCorrect ? 'text-green-600 font-medium' : 'text-red-600'
+            }`}>
+              {answer.userAnswer || "Not answered"}
+            </span>
+          </div>
+
+          {!answer.isCorrect && (
+            <div className="flex items-start gap-2">
+              <span className="text-xs font-medium text-muted-foreground min-w-fit">Correct Answer:</span>
+              <span className="text-xs text-green-600 break-words">
+                {answer.question.correctAnswer}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Explanation */}
+        {answer.question.explanation && (
+          <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-start gap-2">
+              <span className="text-xs font-medium text-muted-foreground min-w-fit">Explanation:</span>
+              <div className="text-xs text-muted-foreground">
+                <RichTextDisplay content={answer.question.explanation} />
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
