@@ -409,7 +409,7 @@ export default function QuizTakingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background dark:bg-background flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -418,7 +418,7 @@ export default function QuizTakingPage() {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
+            className="w-16 h-16 border-4 border-primary dark:border-sidebar-primary border-t-transparent rounded-full mx-auto mb-4"
           />
           <p className="text-lg font-medium">Loading quiz...</p>
         </motion.div>
@@ -442,7 +442,7 @@ export default function QuizTakingPage() {
   const isLastQuestion = currentQuestionIndex === quiz.questions.length - 1
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 ${isFullscreen ? 'p-0' : 'p-4'}`}>
+    <div className={`min-h-screen bg-background dark:bg-background ${isFullscreen ? 'p-0' : 'p-4'}`}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -452,7 +452,7 @@ export default function QuizTakingPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg p-4 shadow-lg"
+          className="flex items-center justify-between mb-6 bg-card/80 dark:bg-card/80 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-border/50"
         >
           <div className="flex items-center space-x-4">
             <motion.div
@@ -501,7 +501,7 @@ export default function QuizTakingPage() {
               <Button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                className="bg-primary hover:bg-primary/90 dark:bg-sidebar-primary dark:hover:bg-sidebar-primary/90"
               >
                 {submitting ? "Submitting..." : "Submit Quiz"}
               </Button>
@@ -515,7 +515,7 @@ export default function QuizTakingPage() {
           animate={{ scaleX: 1 }}
           className="mb-6"
         >
-          <Progress value={progress} className="h-3 bg-gray-200 dark:bg-gray-700" />
+          <Progress value={progress} className="h-3 bg-muted" />
         </motion.div>
 
         {/* Question Card */}
@@ -527,12 +527,12 @@ export default function QuizTakingPage() {
             exit={{ opacity: 0, x: -50, scale: 0.95 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-0">
+            <Card className="bg-card/90 dark:bg-card/90 backdrop-blur-sm shadow-xl border border-border/50">
               <CardHeader className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Brain className="h-5 w-5 text-blue-500" />
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                    <Brain className="h-5 w-5 text-primary dark:text-sidebar-primary" />
+                    <Badge variant="outline" className="bg-primary/10 text-primary dark:bg-sidebar-primary/10 dark:text-sidebar-primary-foreground">
                       {currentQuestion.points} {currentQuestion.points === 1 ? 'point' : 'points'}
                     </Badge>
                   </div>
@@ -852,7 +852,7 @@ export default function QuizTakingPage() {
               variant="outline"
               onClick={previousQuestion}
               disabled={currentQuestionIndex === 0}
-              className="bg-white/80 dark:bg-gray-800/80"
+              className="bg-card hover:bg-card/80 dark:bg-card dark:hover:bg-card/80"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
               Previous
@@ -874,10 +874,10 @@ export default function QuizTakingPage() {
                     onClick={() => goToQuestion(index)}
                     className={`flex-shrink-0 w-8 h-8 rounded-full text-sm font-medium transition-all ${
                       index === currentQuestionIndex
-                        ? 'bg-blue-500 text-white shadow-lg'
+                        ? 'bg-primary text-white shadow-lg dark:bg-sidebar-primary dark:text-sidebar-primary-foreground'
                         : isQuestionAnswered(quiz.questions[index])
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        ? 'bg-green-600 text-white dark:bg-green-700'
+                        : 'bg-muted hover:bg-muted/80 dark:bg-muted dark:hover:bg-muted/80'
                     }`}
                   >
                     {index + 1}
@@ -937,14 +937,14 @@ export default function QuizTakingPage() {
               <Button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
+                className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
               >
                 {submitting ? "Submitting..." : "Finish Quiz"}
               </Button>
             ) : (
               <Button
                 onClick={nextQuestion}
-                className="bg-white/80 dark:bg-gray-800/80"
+                className="bg-card hover:bg-card/80 dark:bg-card dark:hover:bg-card/80"
                 variant="outline"
               >
                 Next

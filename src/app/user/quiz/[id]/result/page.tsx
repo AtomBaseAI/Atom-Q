@@ -19,7 +19,8 @@ import {
   Award,
   List,
   Check,
-  X
+  X,
+  ChevronDown
 } from "lucide-react"
 import { toast } from "sonner"
 import { QuestionType, DifficultyLevel } from "@prisma/client"
@@ -69,6 +70,7 @@ export default function QuizResultPage() {
   const [result, setResult] = useState<QuizResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("all")
+  const [expandedExplanation, setExpandedExplanation] = useState<string | null>(null)
 
   useEffect(() => {
     fetchResult()
@@ -160,9 +162,9 @@ export default function QuizResultPage() {
   const failedCount = getFailedCount()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-background dark:bg-background">
       {/* Header */}
-      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+      <div className="bg-card/80 dark:bg-card/80 backdrop-blur-sm border-b border-border/50 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Button variant="ghost" onClick={() => router.push("/user/quiz")}>
@@ -200,7 +202,7 @@ export default function QuizResultPage() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-white/90 dark:bg-gray-800/90">
+          <Card className="bg-card/90 dark:bg-card/90">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -215,7 +217,7 @@ export default function QuizResultPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 dark:bg-gray-800/90">
+          <Card className="bg-card/90 dark:bg-card/90">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -229,7 +231,7 @@ export default function QuizResultPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 dark:bg-gray-800/90">
+          <Card className="bg-card/90 dark:bg-card/90">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -243,7 +245,7 @@ export default function QuizResultPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 dark:bg-gray-800/90">
+          <Card className="bg-card/90 dark:bg-card/90">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -278,7 +280,13 @@ export default function QuizResultPage() {
           <TabsContent value="all" className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredAnswers.map((answer, index) => (
-                <QuestionCard key={answer.questionId} answer={answer} index={index} />
+                <QuestionCard 
+                  key={answer.questionId} 
+                  answer={answer} 
+                  index={index} 
+                  expandedExplanation={expandedExplanation}
+                  setExpandedExplanation={setExpandedExplanation}
+                />
               ))}
             </div>
           </TabsContent>
@@ -286,7 +294,13 @@ export default function QuizResultPage() {
           <TabsContent value="success" className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredAnswers.map((answer, index) => (
-                <QuestionCard key={answer.questionId} answer={answer} index={index} />
+                <QuestionCard 
+                  key={answer.questionId} 
+                  answer={answer} 
+                  index={index} 
+                  expandedExplanation={expandedExplanation}
+                  setExpandedExplanation={setExpandedExplanation}
+                />
               ))}
             </div>
           </TabsContent>
@@ -294,7 +308,13 @@ export default function QuizResultPage() {
           <TabsContent value="failed" className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredAnswers.map((answer, index) => (
-                <QuestionCard key={answer.questionId} answer={answer} index={index} />
+                <QuestionCard 
+                  key={answer.questionId} 
+                  answer={answer} 
+                  index={index} 
+                  expandedExplanation={expandedExplanation}
+                  setExpandedExplanation={setExpandedExplanation}
+                />
               ))}
             </div>
           </TabsContent>
@@ -302,7 +322,7 @@ export default function QuizResultPage() {
 
         {/* Actions */}
         <div className="flex justify-center mt-8">
-          <Button onClick={() => router.push("/user/quiz")} size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+          <Button onClick={() => router.push("/user/quiz")} size="lg" className="bg-primary hover:bg-primary/90 dark:bg-sidebar-primary dark:hover:bg-sidebar-primary/90">
             Take Another Quiz
           </Button>
         </div>
@@ -312,9 +332,28 @@ export default function QuizResultPage() {
 }
 
 // Question Card Component for compact layout
-function QuestionCard({ answer, index }: { answer: QuizResult["answers"][0]; index: number }) {
+function QuestionCard({ 
+  answer, 
+  index, 
+  expandedExplanation,
+  setExpandedExplanation 
+}: { 
+  answer: QuizResult["answers"][0]; 
+  index: number;
+  expandedExplanation: string | null;
+  setExpandedExplanation: (value: string | null) => void;
+}) {
+  const isExpanded = expandedExplanation === answer.questionId;
+  
+  const toggleExplanation = () => {
+    if (isExpanded) {
+      setExpandedExplanation(null);
+    } else {
+      setExpandedExplanation(answer.questionId);
+    }
+  };
   return (
-    <Card className={`h-fit transition-all hover:shadow-md ${
+    <Card className={`h-fit transition-all hover:shadow-md border ${
       answer.isCorrect 
         ? 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/20' 
         : 'border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/20'
@@ -377,12 +416,24 @@ function QuestionCard({ answer, index }: { answer: QuizResult["answers"][0]; ind
 
         {/* Explanation */}
         {answer.question.explanation && (
-          <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-start gap-2">
-              <span className="text-xs font-medium text-muted-foreground min-w-fit">Explanation:</span>
-              <div className="text-xs text-muted-foreground">
-                <RichTextDisplay content={answer.question.explanation} />
-              </div>
+          <div className="pt-2">
+            <div className="w-full">
+              <button
+                onClick={toggleExplanation}
+                className="w-full py-2 px-3 rounded-md bg-muted/50 hover:bg-muted/70 transition-colors hover:no-underline flex items-center justify-between text-left text-xs font-medium"
+              >
+                <div className="flex items-center gap-2">
+                  <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                  <span>View Explanation</span>
+                </div>
+              </button>
+              {isExpanded && (
+                <div className="pt-2 pb-0">
+                  <div className="text-xs text-muted-foreground px-1">
+                    <RichTextDisplay content={answer.question.explanation} />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
