@@ -148,7 +148,7 @@ model QuizAnswer {
 
 model Settings {
   id                String   @id @default(cuid())
-  siteTitle         String   @default("QuizMaster")
+  siteTitle         String   @default("Atom Q")
   siteDescription   String   @default("Take quizzes and test your knowledge")
   maintenanceMode   Boolean  @default(false)
   allowRegistration Boolean  @default(true)
