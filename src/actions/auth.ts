@@ -86,8 +86,9 @@ export async function registerAction(formData: FormData) {
     })
 
     revalidatePath('/register')
-    redirect('/')
+    // redirect('/')
   } catch (error) {
+    console.log(error)
     return {
       message: 'Failed to create user',
     }
